@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Флеш-карточки — Стихии</title>
 <style>
-  /* Фон + мягкое осветляющее затемнение поверх */
+  /* Фон + лёгкое осветление поверх */
   body{
     margin:0;
     min-height:100vh;
@@ -14,10 +15,16 @@
     padding:40px;
     font-family:sans-serif;
 
-    /* фото как фон */
+    /* ЕСЛИ картинка лежит в КОРНЕ репозитория: */
     background:
-     linear-gradient(rgba(255,255,255,0.40), rgba(255,255,255,0.40)),
-  url("./money-fire.png") center/cover no-repeat fixed;
+      linear-gradient(rgba(255,255,255,0.40), rgba(255,255,255,0.40)),
+      url("./money-fire.png") center/cover no-repeat fixed;
+
+    /* ЕСЛИ картинка лежит в папке /images, поменяй строку выше на это:
+    background:
+      linear-gradient(rgba(255,255,255,0.40), rgba(255,255,255,0.40)),
+      url("./images/money-fire.png") center/cover no-repeat fixed;
+    */
   }
 
   h1{ margin-bottom:10px; }
@@ -45,40 +52,23 @@
   .card.flipped .card-inner{ transform:rotateY(180deg); }
 
   .card-front, .card-back{
-    position:absolute;
-    inset:0;
-    backface-visibility:hidden;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-size:18px;
-    padding:10px;
-    box-sizing:border-box;
-    border-radius:12px;
-    border:1px solid #ccc;
-    background:rgba(255,255,255,0.88); /* слегка полупрозрачно */
+    position:absolute; inset:0; backface-visibility:hidden;
+    display:flex; align-items:center; justify-content:center;
+    font-size:18px; padding:10px; box-sizing:border-box;
+    border-radius:12px; border:1px solid #ccc;
+    background:rgba(255,255,255,0.88);
     text-align:center;
   }
   .card-back{
     transform:rotateY(180deg);
     background:rgba(234,234,234,0.88);
-    font-style:italic;
-    color:#444;
+    font-style:italic; color:#444;
   }
 
-  .buttons{
-    margin-top:20px;
-    display:flex;
-    gap:10px;
-  }
+  .buttons{ margin-top:20px; display:flex; gap:10px; }
   button{
-    padding:10px 20px;
-    font-size:16px;
-    border:none;
-    background:#4CAF50;
-    color:#fff;
-    border-radius:8px;
-    cursor:pointer;
+    padding:10px 20px; font-size:16px; border:none;
+    background:#4CAF50; color:#fff; border-radius:8px; cursor:pointer;
   }
   button:hover{ background:#45a049; }
 </style>
@@ -99,72 +89,38 @@
 </div>
 
 <script>
+  // ДАННЫЕ: обычные карточки + «мульти»-карточки (раскладываются на две)
   const cardsData = [
-    { front: 'Земля', back: 'Подсказка: Ресурсы, сельское хозяйство, недвижимость' },
-    { front: 'Вода', back: 'Подсказка: Продажа питьевой воды, гидроэнергетика, туризм' },
-    { front: 'Огонь', back: 'Подсказка: Энергетика, обогрев, кулинария' },
-    { front: 'Воздух', back: 'Подсказка: Туризм, воздух в баллонах, реклама на воздушных шарах' },
-  ];
+    { type: 'single', front: 'Земля',  back: 'Подсказка: Ресурсы, сельское хозяйство, недвижимость' },
+    { type: 'single', front: 'Вода',   back: 'Подсказка: Продажа питьевой воды, гидроэнергетика, туризм' },
+    { type: 'single', front: 'Огонь',  back: 'Подсказка: Энергетика, обогрев, кулинария' },
+    { type: 'single', front: 'Воздух', back: 'Подсказка: Туризм, воздух в баллонах, реклама на воздушных шарах' },
 
-  let currentIndex = 0;
-  const cardContainer = document.getElementById('card-container');
-
-  function renderCard(index) {
-    const { front, back } = cardsData[index];
-    cardContainer.innerHTML = `
-      <div class="card-inner">
-        <div class="card-front">${front}</div>
-        <div class="card-back">${back}</div>
-      </div>
-    `;
-    cardContainer.classList.remove('flipped');
-  }
-
-  cardContainer.addEventListener('click', () => {
-    cardContainer.classList.toggle('flipped');
-  });
-
-  document.getElementById('next-btn').addEventListener('click', () => {
-    currentIndex = (currentIndex + 1) % cardsData.length;
-    renderCard(currentIndex);
-  });
-
-  document.getElementById('prev-btn').addEventListener('click', () => {
-    currentIndex = (currentIndex - 1 + cardsData.length) % cardsData.length;
-    renderCard(currentIndex);
-  });
-
-  renderCard(currentIndex);
-</script>
-<script>
-  // 1) Данные: обычные карточки + «мульти»-карточки (раскрываются в 2)
-  const cardsData = [
-    // базовые
-    { type: 'single', front: 'Земля', back: 'Подсказка: Ресурсы, сельское хозяйство, недвижимость' },
-    { type: 'single', front: 'Вода',  back: 'Подсказка: Продажа питьевой воды, гидроэнергетика, туризм' },
-    { type: 'single', front: 'Огонь', back: 'Подсказка: Энергетика, обогрев, кулинария' },
-    { type: 'single', front: 'Воздух',back: 'Подсказка: Туризм, воздух в баллонах, реклама на воздушных шарах' },
-
-    // новые «мульти»
+    // Хлопок → две отдельные карточки с заголовками
     {
       type: 'multi',
       front: 'Хлопок',
+      labels: ['Одежда и базовые', 'Домашний декор'],
       backs: [
         'Одежда и базовые изделия: футболки, постельное бельё, полотенца, пижамы.',
         'Домашний декор: шторы, скатерти, пледы, чехлы на мебель.'
       ]
     },
+    // Шерсть → две отдельные карточки
     {
       type: 'multi',
       front: 'Шерсть',
+      labels: ['Тёплые изделия', 'Интерьер'],
       backs: [
         'Тёплые изделия: свитера, носки, варежки, шарфы, пледы (меринос, альпака, смесь).',
         'Интерьер: шерстяные покрывала, ковры, подушки, панно из войлока.'
       ]
     },
+    // Сталь → две отдельные карточки
     {
       type: 'multi',
       front: 'Сталь',
+      labels: ['Малые формы', 'Спорт/дом'],
       backs: [
         'Малые архитектурные формы: стеллажи, каркасы столов, уличные кашпо.',
         'Спорт/дом: турники, стойки для штанги, кронштейны, крепёжные комплекты.'
@@ -175,7 +131,7 @@
   let currentIndex = 0;
   const cardContainer = document.getElementById('card-container');
 
-  // 2) Рендер карточки (безопасно: через createElement + textContent)
+  // РЕНДЕР (безопасно: createElement + textContent)
   function renderCard(index) {
     const item = cardsData[index];
 
@@ -190,9 +146,9 @@
 
     if (item.type === 'single') {
       front.textContent = item.front;
-      back.textContent = item.back;
+      back.textContent  = item.back;
     } else {
-      // «мульти»: показываем фронт + подсказку, что раскроется на 2 идеи
+      // «Мульти»: показываем фронт + подсказку про раскрытие
       front.textContent = item.front;
       const hint = document.createElement('div');
       hint.style.fontSize = '14px';
@@ -210,40 +166,37 @@
     cardContainer.classList.remove('flipped');
   }
 
-  // 3) Логика клика: обычная карточка — флип; «мульти» — раскладывается на две
+  // КЛИК: обычная — флип; «мульти» — раскладывается на две подряд
   cardContainer.addEventListener('click', () => {
     const item = cardsData[currentIndex];
 
     if (item.type === 'multi') {
-      // заменяем текущую «мульти» двумя «single»
       const expanded = item.backs.map((text, i) => ({
         type: 'single',
-        front: `${item.front} — ${i + 1}`,
+        front: `${item.front} — ${item.labels?.[i] ?? i + 1}`,
         back: text
       }));
+      // заменить текущую позицию двумя новыми карточками
       cardsData.splice(currentIndex, 1, ...expanded);
       renderCard(currentIndex); // показываем первую из двух
     } else {
-      cardContainer.classList.toggle('flipped'); // обычный флип
+      cardContainer.classList.toggle('flipped');
     }
   });
 
-  // 4) Кнопки вперёд/назад
+  // Кнопки навигации
   document.getElementById('next-btn').addEventListener('click', () => {
     currentIndex = (currentIndex + 1) % cardsData.length;
     renderCard(currentIndex);
   });
-
   document.getElementById('prev-btn').addEventListener('click', () => {
     currentIndex = (currentIndex - 1 + cardsData.length) % cardsData.length;
     renderCard(currentIndex);
   });
 
-  // 5) Первый рендер
+  // Первый рендер
   renderCard(currentIndex);
 </script>
 
 </body>
 </html>
-
-
