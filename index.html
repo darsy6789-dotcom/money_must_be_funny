@@ -136,7 +136,114 @@
 
   renderCard(currentIndex);
 </script>
+<script>
+  // 1) Данные: обычные карточки + «мульти»-карточки (раскрываются в 2)
+  const cardsData = [
+    // базовые
+    { type: 'single', front: 'Земля', back: 'Подсказка: Ресурсы, сельское хозяйство, недвижимость' },
+    { type: 'single', front: 'Вода',  back: 'Подсказка: Продажа питьевой воды, гидроэнергетика, туризм' },
+    { type: 'single', front: 'Огонь', back: 'Подсказка: Энергетика, обогрев, кулинария' },
+    { type: 'single', front: 'Воздух',back: 'Подсказка: Туризм, воздух в баллонах, реклама на воздушных шарах' },
+
+    // новые «мульти»
+    {
+      type: 'multi',
+      front: 'Хлопок',
+      backs: [
+        'Одежда и базовые изделия: футболки, постельное бельё, полотенца, пижамы.',
+        'Домашний декор: шторы, скатерти, пледы, чехлы на мебель.'
+      ]
+    },
+    {
+      type: 'multi',
+      front: 'Шерсть',
+      backs: [
+        'Тёплые изделия: свитера, носки, варежки, шарфы, пледы (меринос, альпака, смесь).',
+        'Интерьер: шерстяные покрывала, ковры, подушки, панно из войлока.'
+      ]
+    },
+    {
+      type: 'multi',
+      front: 'Сталь',
+      backs: [
+        'Малые архитектурные формы: стеллажи, каркасы столов, уличные кашпо.',
+        'Спорт/дом: турники, стойки для штанги, кронштейны, крепёжные комплекты.'
+      ]
+    }
+  ];
+
+  let currentIndex = 0;
+  const cardContainer = document.getElementById('card-container');
+
+  // 2) Рендер карточки (безопасно: через createElement + textContent)
+  function renderCard(index) {
+    const item = cardsData[index];
+
+    const inner = document.createElement('div');
+    inner.className = 'card-inner';
+
+    const front = document.createElement('div');
+    front.className = 'card-front';
+
+    const back = document.createElement('div');
+    back.className = 'card-back';
+
+    if (item.type === 'single') {
+      front.textContent = item.front;
+      back.textContent = item.back;
+    } else {
+      // «мульти»: показываем фронт + подсказку, что раскроется на 2 идеи
+      front.textContent = item.front;
+      const hint = document.createElement('div');
+      hint.style.fontSize = '14px';
+      hint.style.opacity = '.7';
+      hint.style.marginTop = '6px';
+      hint.textContent = 'Нажми, чтобы раскрыть 2 идеи';
+      front.appendChild(hint);
+
+      back.style.fontStyle = 'normal';
+      back.textContent = 'Нажми, чтобы раскрыть 2 идеи';
+    }
+
+    inner.append(front, back);
+    cardContainer.replaceChildren(inner);
+    cardContainer.classList.remove('flipped');
+  }
+
+  // 3) Логика клика: обычная карточка — флип; «мульти» — раскладывается на две
+  cardContainer.addEventListener('click', () => {
+    const item = cardsData[currentIndex];
+
+    if (item.type === 'multi') {
+      // заменяем текущую «мульти» двумя «single»
+      const expanded = item.backs.map((text, i) => ({
+        type: 'single',
+        front: `${item.front} — ${i + 1}`,
+        back: text
+      }));
+      cardsData.splice(currentIndex, 1, ...expanded);
+      renderCard(currentIndex); // показываем первую из двух
+    } else {
+      cardContainer.classList.toggle('flipped'); // обычный флип
+    }
+  });
+
+  // 4) Кнопки вперёд/назад
+  document.getElementById('next-btn').addEventListener('click', () => {
+    currentIndex = (currentIndex + 1) % cardsData.length;
+    renderCard(currentIndex);
+  });
+
+  document.getElementById('prev-btn').addEventListener('click', () => {
+    currentIndex = (currentIndex - 1 + cardsData.length) % cardsData.length;
+    renderCard(currentIndex);
+  });
+
+  // 5) Первый рендер
+  renderCard(currentIndex);
+</script>
 
 </body>
 </html>
+
 
