@@ -73,15 +73,16 @@
   <button id="next-btn">Вперёд</button>
 </div>
 
+<noscript>Для работы карточек нужен включённый JavaScript.</noscript>
+
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-  // Данные
+(function(){
+  // --- данные ---
   var cardsData = [
     { type: 'single', front: 'Земля',  back: 'Подсказка: Ресурсы, сельское хозяйство, недвижимость' },
     { type: 'single', front: 'Вода',   back: 'Подсказка: Продажа питьевой воды, гидроэнергетика, туризм' },
     { type: 'single', front: 'Огонь',  back: 'Подсказка: Энергетика, обогрев, кулинария' },
     { type: 'single', front: 'Воздух', back: 'Подсказка: Туризм, воздух в баллонах, реклама на воздушных шарах' },
-
     { type: 'multi', front: 'Хлопок',
       labels: ['Одежда и базовые изделия', 'Домашний декор'],
       texts:  ['Футболки, постельное бельё, полотенца, пижамы.', 'Шторы, скатерти, пледы, чехлы на мебель.'] },
@@ -94,129 +95,114 @@ document.addEventListener('DOMContentLoaded', function () {
   ];
 
   var currentIndex = 0;
-  var mode = 'front'; // 'front' или 'split' для текущего элемента (только для multi)
 
-  var container    = document.getElementById('card-container');
-  var splitHeader  = document.getElementById('split-header');
-  var splitTitleEl = document.getElementById('split-title');
-  var collapseBtn  = document.getElementById('collapse-split');
+  var container, splitHeader, splitTitleEl, collapseBtn;
 
+  // --- утилита совместимой вставки ---
   function clearAndAppend() {
     container.innerHTML = '';
-    for (var i = 0; i < arguments.length; i++) container.appendChild(arguments[i]);
+    for (var i = 0; i < arguments.length; i++) {
+      container.appendChild(arguments[i]);
+    }
   }
 
-  /* ---- фабрики ---- */
+  // --- фабрики ---
   function createFlipCard(frontText, backText){
-    var wrapper = document.createElement('div');
-    wrapper.className = 'card';
-    var inner = document.createElement('div');
-    inner.className = 'card-inner';
-
-    var front = document.createElement('div');
-    front.className = 'card-front';
-    front.textContent = frontText;
-
-    var back = document.createElement('div');
-    back.className = 'card-back';
-    back.textContent = backText;
-
-    inner.appendChild(front);
-    inner.appendChild(back);
-    wrapper.appendChild(inner);
-
-    wrapper.addEventListener('click', function (e) {
-      e.stopPropagation();
-      wrapper.classList.toggle('flipped');
-    });
-
+    var wrapper = document.createElement('div'); wrapper.className = 'card';
+    var inner = document.createElement('div');   inner.className = 'card-inner';
+    var front = document.createElement('div');   front.className = 'card-front'; front.textContent = frontText;
+    var back  = document.createElement('div');   back.className  = 'card-back';  back.textContent  = backText;
+    inner.appendChild(front); inner.appendChild(back); wrapper.appendChild(inner);
+    wrapper.addEventListener('click', function(e){ e.stopPropagation(); wrapper.classList.toggle('flipped'); });
     return wrapper;
   }
 
-  // «Псевдо-флип» — фронт мульти. По клику переходим в split (две карточки).
+  // фронт мульти: по клику раскрываем 2 карточки
   function createMultiFrontCard(title, onOpen){
-    var wrapper = document.createElement('div');
-    wrapper.className = 'card';
-    var inner = document.createElement('div');
-    inner.className = 'card-inner';
-
-    var front = document.createElement('div');
-    front.className = 'card-front';
-    front.textContent = title;
-
-    // задняя сторона нам не нужна — делаем пустую, чтобы не было «подсказок»
-    var back = document.createElement('div');
-    back.className = 'card-back';
-    back.textContent = '';
-
-    inner.appendChild(front);
-    inner.appendChild(back);
-    wrapper.appendChild(inner);
-
-    wrapper.addEventListener('click', function () {
-      if (typeof onOpen === 'function') onOpen();
-    });
-
+    var wrapper = document.createElement('div'); wrapper.className = 'card';
+    var inner = document.createElement('div');   inner.className = 'card-inner';
+    var front = document.createElement('div');   front.className = 'card-front'; front.textContent = title;
+    var back  = document.createElement('div');   back.className  = 'card-back';  back.textContent  = ''; // без подсказки
+    inner.appendChild(front); inner.appendChild(back); wrapper.appendChild(inner);
+    wrapper.addEventListener('click', function(){ if (onOpen) onOpen(); });
     return wrapper;
   }
 
   function createInfoCard(title, text){
     var box = document.createElement('div'); box.className = 'card-static';
-    var t = document.createElement('div');  t.className = 'card-title'; t.textContent = title;
-    var d = document.createElement('div');  d.className = 'card-text';  d.textContent = text;
+    var t = document.createElement('div');   t.className = 'card-title'; t.textContent = title;
+    var d = document.createElement('div');   d.className = 'card-text';  d.textContent = text;
     box.appendChild(t); box.appendChild(d); return box;
   }
 
-  /* ---- рендеры ---- */
+  // --- рендеры ---
   function renderSingle(item){
     splitHeader.style.display = 'none';
-    var card = createFlipCard(item.front, item.back);
-    clearAndAppend(card);
+    clearAndAppend(createFlipCard(item.front, item.back));
   }
 
   function renderMultiFront(item){
-    mode = 'front';
     splitHeader.style.display = 'none';
-    var card = createMultiFrontCard(item.front, function(){ renderMultiSplit(item); });
-    clearAndAppend(card);
+    clearAndAppend(createMultiFrontCard(item.front, function(){ renderMultiSplit(item); }));
   }
 
   function renderMultiSplit(item){
-    mode = 'split';
     splitTitleEl.textContent = item.front;
     splitHeader.style.display = 'flex';
-
-    var card1 = createInfoCard(item.labels[0], item.texts[0]);
-    var card2 = createInfoCard(item.labels[1], item.texts[1]);
-    clearAndAppend(card1, card2);
+    clearAndAppend(
+      createInfoCard(item.labels[0], item.texts[0]),
+      createInfoCard(item.labels[1], item.texts[1])
+    );
   }
 
   function render(){
     var item = cardsData[currentIndex];
     if (item.type === 'single') renderSingle(item);
-    else renderMultiFront(item); // всегда начинаем с фронта для мульти
+    else renderMultiFront(item);
   }
 
-  /* ---- управление ---- */
-  collapseBtn.addEventListener('click', function () {
-    // из split возвращаемся к фронту текущего мульти
-    var item = cardsData[currentIndex];
-    renderMultiFront(item);
-  });
+  // --- управление ---
+  function bindControls(){
+    collapseBtn.addEventListener('click', function () {
+      var item = cardsData[currentIndex];
+      renderMultiFront(item);
+    });
 
-  document.getElementById('next-btn').addEventListener('click', function () {
-    currentIndex = (currentIndex + 1) % cardsData.length;
+    document.getElementById('next-btn').addEventListener('click', function () {
+      currentIndex = (currentIndex + 1) % cardsData.length;
+      render();
+    });
+
+    document.getElementById('prev-btn').addEventListener('click', function () {
+      currentIndex = (currentIndex - 1 + cardsData.length) % cardsData.length;
+      render();
+    });
+  }
+
+  // --- инициализация с «двойной страховкой» ---
+  function init(){
+    container    = document.getElementById('card-container');
+    splitHeader  = document.getElementById('split-header');
+    splitTitleEl = document.getElementById('split-title');
+    collapseBtn  = document.getElementById('collapse-split');
+
+    if (!container || !splitHeader || !splitTitleEl || !collapseBtn) {
+      // если конструктор ещё не вставил DOM – пробуем чуть позже
+      setTimeout(init, 50);
+      return;
+    }
+    bindControls();
     render();
-  });
+  }
 
-  document.getElementById('prev-btn').addEventListener('click', function () {
-    currentIndex = (currentIndex - 1 + cardsData.length) % cardsData.length;
-    render();
-  });
-
-  // первый рендер
-  render();
-});
+  // некоторые CMS переносят скрипт вверх — страхуемся обоими событиями
+  if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    init();
+  } else {
+    document.addEventListener('DOMContentLoaded', init);
+    window.addEventListener('load', init);
+  }
+})();
 </script>
 
 </body>
