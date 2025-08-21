@@ -6,118 +6,51 @@
   <title>Флеш-карточки — Стихии</title>
   <style>
     body{
-      margin:0;
-      min-height:100vh;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      padding:40px;
-      font-family:sans-serif;
+      margin:0; min-height:100vh; display:flex; flex-direction:column; align-items:center;
+      padding:40px; font-family:sans-serif;
       background:
         linear-gradient(rgba(255,255,255,.40), rgba(255,255,255,.40)),
         url("./money-fire.png") center/cover no-repeat fixed;
     }
-
     h1{ margin-bottom:10px; }
-    .rules{
-      font-size:16px;
-      max-width:720px;
-      text-align:center;
-      margin-bottom:20px;
-      color:#333;
-    }
+    .rules{ font-size:16px; max-width:720px; text-align:center; margin-bottom:20px; color:#333; }
 
-    /* Шапка режима 2-х карт (показывается только в split-режиме) */
-    #split-header{
-      display:none;
-      align-items:center;
-      gap:10px;
-      margin-bottom:10px;
-      font-size:14px;
-      color:#333;
-    }
+    #split-header{ display:none; align-items:center; gap:10px; margin-bottom:10px; font-size:14px; color:#333; }
     #split-title{ font-weight:600; opacity:.9; }
     #collapse-split{
-      padding:6px 12px;
-      font-size:14px;
-      border:1px solid #ccc;
-      border-radius:8px;
-      background:#f3f3f3;
-      color:#333;
-      cursor:pointer;
+      padding:6px 12px; font-size:14px; border:1px solid #ccc; border-radius:8px;
+      background:#f3f3f3; color:#333; cursor:pointer;
     }
     #collapse-split:hover{ background:#e9e9e9; }
 
-    /* Контейнер выводит 1 или 2 карточки рядом */
     #card-container{
-      width:100%;
-      display:flex;
-      gap:16px;
-      flex-wrap:wrap;
-      justify-content:center;
-      align-items:stretch;
-      min-height:190px; /* чтобы кнопки не подпрыгивали */
+      width:100%; display:flex; gap:16px; flex-wrap:wrap;
+      justify-content:center; align-items:stretch; min-height:190px;
     }
 
-    /* Флип-карточка (для обычных) */
-    .card{
-      width:280px;
-      height:180px;
-      perspective:1000px;
-      cursor:pointer;
-      display:block;
-    }
-    .card-inner{
-      position:relative;
-      width:100%; height:100%;
-      transform-style:preserve-3d;
-      transition:transform .6s;
-    }
+    /* Флип-карта (только для single и фронта multi) */
+    .card{ width:280px; height:180px; perspective:1000px; cursor:pointer; display:block; }
+    .card-inner{ position:relative; width:100%; height:100%; transform-style:preserve-3d; transition:transform .6s; }
     .card.flipped .card-inner{ transform:rotateY(180deg); }
-
     .card-front, .card-back{
       position:absolute; inset:0; backface-visibility:hidden;
       display:flex; align-items:center; justify-content:center;
       font-size:18px; padding:10px; box-sizing:border-box;
-      border-radius:12px; border:1px solid #ccc;
-      background:rgba(255,255,255,0.88); text-align:center;
+      border-radius:12px; border:1px solid #ccc; text-align:center;
+      background:rgba(255,255,255,.88);
     }
-    .card-back{
-      transform:rotateY(180deg);
-      background:rgba(234,234,234,0.88);
-      font-style:italic; color:#444;
-    }
+    .card-back{ transform:rotateY(180deg); background:rgba(234,234,234,.88); font-style:italic; color:#444; }
 
-    /* НЕ флип-карточка (для двух раскрытых) */
+    /* Две раскрытые карточки (ответы multi) */
     .card-static{
-      width:320px;
-      min-height:180px;
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-      padding:14px;
-      border-radius:12px;
-      border:1px solid #ccc;
-      background:rgba(255,255,255,0.88);
-      box-sizing:border-box;
+      width:320px; min-height:180px; display:flex; flex-direction:column; gap:8px;
+      padding:14px; border-radius:12px; border:1px solid #ccc; background:rgba(255,255,255,.88); box-sizing:border-box;
     }
-    .card-title{
-      font-weight:600;
-      font-size:18px;
-    }
-    .card-text{
-      font-size:16px;
-      line-height:1.35;
-      color:#333;
-    }
+    .card-title{ font-weight:600; font-size:18px; }
+    .card-text{ font-size:16px; line-height:1.35; color:#333; }
 
-    .buttons{
-      margin-top:20px; display:flex; gap:10px;
-    }
-    button{
-      padding:10px 20px; font-size:16px; border:none;
-      background:#4CAF50; color:#fff; border-radius:8px; cursor:pointer;
-    }
+    .buttons{ margin-top:20px; display:flex; gap:10px; }
+    button{ padding:10px 20px; font-size:16px; border:none; background:#4CAF50; color:#fff; border-radius:8px; cursor:pointer; }
     button:hover{ background:#45a049; }
   </style>
 </head>
@@ -129,12 +62,10 @@
   Твоя задача — монетизировать каждый элемент.
 </div>
 
-<!-- Шапка появляется только когда показываем 2 карточки -->
 <div id="split-header">
   <button id="collapse-split">← К «<span id="split-title"></span>»</button>
 </div>
 
-<!-- Контейнер карточек -->
 <div id="card-container"></div>
 
 <div class="buttons">
@@ -151,6 +82,142 @@ document.addEventListener('DOMContentLoaded', function () {
     { type: 'single', front: 'Огонь',  back: 'Подсказка: Энергетика, обогрев, кулинария' },
     { type: 'single', front: 'Воздух', back: 'Подсказка: Туризм, воздух в баллонах, реклама на воздушных шарах' },
 
-    {
-      type: 'multi',
-      fro
+    { type: 'multi', front: 'Хлопок',
+      labels: ['Одежда и базовые изделия', 'Домашний декор'],
+      texts:  ['Футболки, постельное бельё, полотенца, пижамы.', 'Шторы, скатерти, пледы, чехлы на мебель.'] },
+    { type: 'multi', front: 'Шерсть',
+      labels: ['Тёплые изделия', 'Интерьер'],
+      texts:  ['Свитера, носки, варежки, шарфы, пледы (меринос, альпака, смесь).', 'Шерстяные покрывала, ковры, подушки, панно из войлока.'] },
+    { type: 'multi', front: 'Сталь',
+      labels: ['Малые архитектурные формы', 'Спорт/дом'],
+      texts:  ['Стеллажи, каркасы столов, уличные кашпо.', 'Турники, стойки для штанги, кронштейны, крепёжные комплекты.'] }
+  ];
+
+  var currentIndex = 0;
+  var mode = 'front'; // 'front' или 'split' для текущего элемента (только для multi)
+
+  var container    = document.getElementById('card-container');
+  var splitHeader  = document.getElementById('split-header');
+  var splitTitleEl = document.getElementById('split-title');
+  var collapseBtn  = document.getElementById('collapse-split');
+
+  function clearAndAppend() {
+    container.innerHTML = '';
+    for (var i = 0; i < arguments.length; i++) container.appendChild(arguments[i]);
+  }
+
+  /* ---- фабрики ---- */
+  function createFlipCard(frontText, backText){
+    var wrapper = document.createElement('div');
+    wrapper.className = 'card';
+    var inner = document.createElement('div');
+    inner.className = 'card-inner';
+
+    var front = document.createElement('div');
+    front.className = 'card-front';
+    front.textContent = frontText;
+
+    var back = document.createElement('div');
+    back.className = 'card-back';
+    back.textContent = backText;
+
+    inner.appendChild(front);
+    inner.appendChild(back);
+    wrapper.appendChild(inner);
+
+    wrapper.addEventListener('click', function (e) {
+      e.stopPropagation();
+      wrapper.classList.toggle('flipped');
+    });
+
+    return wrapper;
+  }
+
+  // «Псевдо-флип» — фронт мульти. По клику переходим в split (две карточки).
+  function createMultiFrontCard(title, onOpen){
+    var wrapper = document.createElement('div');
+    wrapper.className = 'card';
+    var inner = document.createElement('div');
+    inner.className = 'card-inner';
+
+    var front = document.createElement('div');
+    front.className = 'card-front';
+    front.textContent = title;
+
+    // задняя сторона нам не нужна — делаем пустую, чтобы не было «подсказок»
+    var back = document.createElement('div');
+    back.className = 'card-back';
+    back.textContent = '';
+
+    inner.appendChild(front);
+    inner.appendChild(back);
+    wrapper.appendChild(inner);
+
+    wrapper.addEventListener('click', function () {
+      if (typeof onOpen === 'function') onOpen();
+    });
+
+    return wrapper;
+  }
+
+  function createInfoCard(title, text){
+    var box = document.createElement('div'); box.className = 'card-static';
+    var t = document.createElement('div');  t.className = 'card-title'; t.textContent = title;
+    var d = document.createElement('div');  d.className = 'card-text';  d.textContent = text;
+    box.appendChild(t); box.appendChild(d); return box;
+  }
+
+  /* ---- рендеры ---- */
+  function renderSingle(item){
+    splitHeader.style.display = 'none';
+    var card = createFlipCard(item.front, item.back);
+    clearAndAppend(card);
+  }
+
+  function renderMultiFront(item){
+    mode = 'front';
+    splitHeader.style.display = 'none';
+    var card = createMultiFrontCard(item.front, function(){ renderMultiSplit(item); });
+    clearAndAppend(card);
+  }
+
+  function renderMultiSplit(item){
+    mode = 'split';
+    splitTitleEl.textContent = item.front;
+    splitHeader.style.display = 'flex';
+
+    var card1 = createInfoCard(item.labels[0], item.texts[0]);
+    var card2 = createInfoCard(item.labels[1], item.texts[1]);
+    clearAndAppend(card1, card2);
+  }
+
+  function render(){
+    var item = cardsData[currentIndex];
+    if (item.type === 'single') renderSingle(item);
+    else renderMultiFront(item); // всегда начинаем с фронта для мульти
+  }
+
+  /* ---- управление ---- */
+  collapseBtn.addEventListener('click', function () {
+    // из split возвращаемся к фронту текущего мульти
+    var item = cardsData[currentIndex];
+    renderMultiFront(item);
+  });
+
+  document.getElementById('next-btn').addEventListener('click', function () {
+    currentIndex = (currentIndex + 1) % cardsData.length;
+    render();
+  });
+
+  document.getElementById('prev-btn').addEventListener('click', function () {
+    currentIndex = (currentIndex - 1 + cardsData.length) % cardsData.length;
+    render();
+  });
+
+  // первый рендер
+  render();
+});
+</script>
+
+</body>
+</html>
