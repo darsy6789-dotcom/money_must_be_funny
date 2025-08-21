@@ -28,7 +28,7 @@
       justify-content:center; align-items:stretch; min-height:190px;
     }
 
-    /* Флип-карта (только для single и фронта multi) */
+    /* Флип-карта (для single и фронта multi) */
     .card{ width:280px; height:180px; perspective:1000px; cursor:pointer; display:block; }
     .card-inner{ position:relative; width:100%; height:100%; transform-style:preserve-3d; transition:transform .6s; }
     .card.flipped .card-inner{ transform:rotateY(180deg); }
@@ -79,10 +79,10 @@
 (function(){
   // --- данные ---
   var cardsData = [
-    { type: 'single', front: 'Земля',  back: 'Подсказка: Ресурсы, сельское хозяйство, недвижимость' },
-    { type: 'single', front: 'Вода',   back: 'Подсказка: Продажа питьевой воды, гидроэнергетика, туризм' },
-    { type: 'single', front: 'Огонь',  back: 'Подсказка: Энергетика, обогрев, кулинария' },
-    { type: 'single', front: 'Воздух', back: 'Подсказка: Туризм, воздух в баллонах, реклама на воздушных шарах' },
+    { type: 'single', front: 'Земля',  back: 'Ресурсы, сельское хозяйство, недвижимость' },
+    { type: 'single', front: 'Вода',   back: 'Продажа питьевой воды, гидроэнергетика, туризм' },
+    { type: 'single', front: 'Огонь',  back: 'Энергетика, обогрев, кулинария' },
+    { type: 'single', front: 'Воздух', back: 'Туризм, воздух в баллонах, реклама на воздушных шарах' },
     { type: 'multi', front: 'Хлопок',
       labels: ['Одежда и базовые изделия', 'Домашний декор'],
       texts:  ['Футболки, постельное бельё, полотенца, пижамы.', 'Шторы, скатерти, пледы, чехлы на мебель.'] },
@@ -187,7 +187,6 @@
     collapseBtn  = document.getElementById('collapse-split');
 
     if (!container || !splitHeader || !splitTitleEl || !collapseBtn) {
-      // если конструктор ещё не вставил DOM – пробуем чуть позже
       setTimeout(init, 50);
       return;
     }
@@ -195,7 +194,6 @@
     render();
   }
 
-  // некоторые CMS переносят скрипт вверх — страхуемся обоими событиями
   if (document.readyState === 'complete' || document.readyState === 'interactive') {
     init();
   } else {
