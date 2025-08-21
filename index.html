@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Флеш-карточки — Стихии</title>
 <style>
-  /* Фон */
+  /* Фон + лёгкое осветление поверх */
   body{
     margin:0;
     min-height:100vh;
@@ -15,10 +15,12 @@
     padding:40px;
     font-family:sans-serif;
 
+    /* если картинка лежит в корне репозитория */
     background:
       linear-gradient(rgba(255,255,255,0.40), rgba(255,255,255,0.40)),
       url("./money-fire.png") center/cover no-repeat fixed;
-    /* если картинка в /images:
+
+    /* если в /images — замени строку выше на:
     background:
       linear-gradient(rgba(255,255,255,0.40), rgba(255,255,255,0.40)),
       url("./images/money-fire.png") center/cover no-repeat fixed;
@@ -89,7 +91,7 @@
   Твоя задача — монетизировать каждый элемент.
 </div>
 
-<!-- ВАЖНО: больше НЕТ class="card" на контейнере -->
+<!-- Важно: без class="card" -->
 <div id="card-container"></div>
 
 <div class="buttons">
@@ -98,7 +100,7 @@
 </div>
 
 <script>
-  // Данные: обычные карточки + «мульти»-карточки (раскладываются на две РЯДОМ)
+  // Данные: обычные + «мульти» (раскладываются на две ОТДЕЛЬНЫЕ карточки)
   const cardsData = [
     { type: 'single', front: 'Земля',  back: 'Подсказка: Ресурсы, сельское хозяйство, недвижимость' },
     { type: 'single', front: 'Вода',   back: 'Подсказка: Продажа питьевой воды, гидроэнергетика, туризм' },
@@ -129,123 +131,3 @@
       labels: ['Малые формы', 'Спорт/дом'],
       backs: [
         'Малые архитектурные формы: стеллажи, каркасы столов, уличные кашпо.',
-        'Спорт/дом: турники, стойки для штанги, кронштейны, крепёжные комплекты.'
-      ]
-    }
-  ];
-
-  let currentIndex = 0;
-  let splitView = null; // если активен — тут две карточки, которые показываем рядом
-  const container = document.getElementById('card-container');
-
-  // Фабрика карточек
-  function createCard(frontText, backText){
-    const wrapper = document.createElement('div');
-    wrapper.className = 'card';
-
-    const inner = document.createElement('div');
-    inner.className = 'card-inner';
-
-    const front = document.createElement('div');
-    front.className = 'card-front';
-    front.textContent = frontText;
-
-    const back = document.createElement('div');
-    back.className = 'card-back';
-    back.textContent = backText;
-
-    inner.append(front, back);
-    wrapper.append(inner);
-
-    // клик — просто флип конкретной карточки
-    wrapper.addEventListener('click', (e) => {
-      e.stopPropagation();
-      wrapper.classList.toggle('flipped');
-    });
-
-    return wrapper;
-  }
-
-  // Рендер одной обычной карточки
-  function renderSingle(item){
-    const card = createCard(item.front, item.back);
-    container.replaceChildren(card);
-  }
-
-  // Рендер «заглушки» для мульти (до клика)
-  function renderMultiPlaceholder(item){
-    // карточка-приглашение: «Нажми, чтобы раскрыть 2 идеи»
-    const wrapper = document.createElement('div');
-    wrapper.className = 'card';
-
-    const inner = document.createElement('div');
-    inner.className = 'card-inner';
-
-    const front = document.createElement('div');
-    front.className = 'card-front';
-    front.textContent = item.front;
-
-    const hint = document.createElement('div');
-    hint.style.fontSize = '14px';
-    hint.style.opacity = '.7';
-    hint.style.marginTop = '6px';
-    hint.textContent = 'Нажми, чтобы открыть 2 отдельные карточки';
-    front.appendChild(hint);
-
-    const back = document.createElement('div');
-    back.className = 'card-back';
-    back.style.fontStyle = 'normal';
-    back.textContent = 'Нажми, чтобы открыть 2 отдельные карточки';
-
-    inner.append(front, back);
-    wrapper.append(inner);
-
-    // клик по мульти → показать ДВЕ карточки рядом
-    wrapper.addEventListener('click', () => {
-      const expanded = item.backs.map((text, i) => ({
-        type: 'single',
-        front: `${item.front} — ${item.labels?.[i] ?? i + 1}`,
-        back: text
-      }));
-      splitView = expanded;     // включаем режим двух карточек
-      render();                 // перерисовываем
-    });
-
-    container.replaceChildren(wrapper);
-  }
-
-  // Рендер двух карточек рядом (split view)
-  function renderSplit(expanded){
-    const cards = expanded.map(it => createCard(it.front, it.back));
-    container.replaceChildren(...cards);
-  }
-
-  function render(){
-    if (splitView){
-      renderSplit(splitView);
-      return;
-    }
-    const item = cardsData[currentIndex];
-    if (item.type === 'single') renderSingle(item);
-    else renderMultiPlaceholder(item);
-  }
-
-  // Навигация: при активном splitView сначала выходим из него, потом листаем
-  document.getElementById('next-btn').addEventListener('click', () => {
-    if (splitView){ splitView = null; currentIndex = (currentIndex + 1) % cardsData.length; }
-    else { currentIndex = (currentIndex + 1) % cardsData.length; }
-    render();
-  });
-
-  document.getElementById('prev-btn').addEventListener('click', () => {
-    if (splitView){ splitView = null; currentIndex = (currentIndex - 1 + cardsData.length) % cardsData.length; }
-    else { currentIndex = (currentIndex - 1 + cardsData.length) % cardsData.length; }
-    render();
-  });
-
-  // Первый рендер
-  render();
-</script>
-
-</body>
-</html>
