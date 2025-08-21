@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Флеш-карточки — Стихии</title>
   <style>
-    /* Фон + лёгкое осветление поверх */
     body{
       margin:0;
       min-height:100vh;
@@ -14,22 +13,15 @@
       align-items:center;
       padding:40px;
       font-family:sans-serif;
-
       background:
-        linear-gradient(rgba(255,255,255,0.40), rgba(255,255,255,0.40)),
+        linear-gradient(rgba(255,255,255,.40), rgba(255,255,255,.40)),
         url("./money-fire.png") center/cover no-repeat fixed;
-
-      /* если в /images — замени на:
-      background:
-        linear-gradient(rgba(255,255,255,0.40), rgba(255,255,255,0.40)),
-        url("./images/money-fire.png") center/cover no-repeat fixed;
-      */
     }
 
     h1{ margin-bottom:10px; }
     .rules{
       font-size:16px;
-      max-width:520px;
+      max-width:720px;
       text-align:center;
       margin-bottom:20px;
       color:#333;
@@ -58,6 +50,7 @@
 
     /* Контейнер выводит 1 или 2 карточки рядом */
     #card-container{
+      width:100%;
       display:flex;
       gap:16px;
       flex-wrap:wrap;
@@ -72,6 +65,7 @@
       height:180px;
       perspective:1000px;
       cursor:pointer;
+      display:block;
     }
     .card-inner{
       position:relative;
@@ -140,7 +134,7 @@
   <button id="collapse-split">← К «<span id="split-title"></span>»</button>
 </div>
 
-<!-- Важно: без class="card" -->
+<!-- Контейнер карточек -->
 <div id="card-container"></div>
 
 <div class="buttons">
@@ -149,152 +143,14 @@
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-  // Данные: обычные + «мульти» (сразу раскрываются на две статичные карточки)
-  const cardsData = [
+document.addEventListener('DOMContentLoaded', function () {
+  // Данные
+  var cardsData = [
     { type: 'single', front: 'Земля',  back: 'Подсказка: Ресурсы, сельское хозяйство, недвижимость' },
     { type: 'single', front: 'Вода',   back: 'Подсказка: Продажа питьевой воды, гидроэнергетика, туризм' },
     { type: 'single', front: 'Огонь',  back: 'Подсказка: Энергетика, обогрев, кулинария' },
     { type: 'single', front: 'Воздух', back: 'Подсказка: Туризм, воздух в баллонах, реклама на воздушных шарах' },
 
-    /* Хлопок */
     {
       type: 'multi',
-      front: 'Хлопок',
-      labels: ['Одежда и базовые изделия', 'Домашний декор'],
-      texts: [
-        'Футболки, постельное бельё, полотенца, пижамы.',
-        'Шторы, скатерти, пледы, чехлы на мебель.'
-      ]
-    },
-    /* Шерсть */
-    {
-      type: 'multi',
-      front: 'Шерсть',
-      labels: ['Тёплые изделия', 'Интерьер'],
-      texts: [
-        'Свитера, носки, варежки, шарфы, пледы (меринос, альпака, смесь).',
-        'Шерстяные покрывала, ковры, подушки, панно из войлока.'
-      ]
-    },
-    /* Сталь */
-    {
-      type: 'multi',
-      front: 'Сталь',
-      labels: ['Малые архитектурные формы', 'Спорт/дом'],
-      texts: [
-        'Стеллажи, каркасы столов, уличные кашпо.',
-        'Турники, стойки для штанги, кронштейны, крепёжные комплекты.'
-      ]
-    }
-  ];
-
-  let currentIndex = 0;
-
-  const container    = document.getElementById('card-container');
-  const splitHeader  = document.getElementById('split-header');
-  const splitTitleEl = document.getElementById('split-title');
-  const collapseBtn  = document.getElementById('collapse-split');
-
-  /* ---------- фабрики карточек ---------- */
-
-  // Флип-карточка (для обычных)
-  function createFlipCard(frontText, backText){
-    const wrapper = document.createElement('div');
-    wrapper.className = 'card';
-
-    const inner = document.createElement('div');
-    inner.className = 'card-inner';
-
-    const front = document.createElement('div');
-    front.className = 'card-front';
-    front.textContent = frontText;
-
-    const back = document.createElement('div');
-    back.className = 'card-back';
-    back.textContent = backText;
-
-    inner.append(front, back);
-    wrapper.append(inner);
-
-    wrapper.addEventListener('click', (e) => {
-      e.stopPropagation();
-      wrapper.classList.toggle('flipped');
-    });
-
-    return wrapper;
-  }
-
-  // Статичная карточка (заголовок + текст — без переворота)
-  function createInfoCard(title, text){
-    const box = document.createElement('div');
-    box.className = 'card-static';
-
-    const t = document.createElement('div');
-    t.className = 'card-title';
-    t.textContent = title;
-
-    const d = document.createElement('div');
-    d.className = 'card-text';
-    d.textContent = text;
-
-    box.append(t, d);
-    return box;
-  }
-
-  /* ---------- рендеры ---------- */
-
-  function renderSingle(item){
-    splitHeader.style.display = 'none';
-    const card = createFlipCard(item.front, item.back);
-    container.replaceChildren(card);
-  }
-
-  // Мульти сразу раскрываем на 2 инфо-карты
-  // ВАЖНО: в заголовках используем ТОЛЬКО labels (без названия элемента)
-  function renderMulti(item){
-    splitTitleEl.textContent = item.front;   // элемент показываем в шапке
-    splitHeader.style.display = 'flex';
-
-    const card1 = createInfoCard(item.labels[0], item.texts[0]);
-    const card2 = createInfoCard(item.labels[1], item.texts[1]);
-
-    container.replaceChildren(card1, card2);
-  }
-
-  function render(){
-    const item = cardsData[currentIndex];
-    if (item.type === 'single') renderSingle(item);
-    else renderMulti(item);
-  }
-
-  /* ---------- управление ---------- */
-
-  // Кнопка «← К “Элементу”»
-  collapseBtn.addEventListener('click', () => {
-    // вернуться к «фронту» текущего элемента
-    splitHeader.style.display = 'none';
-    const item = cardsData[currentIndex];
-    const card = createFlipCard(item.front, 'Нажми, чтобы посмотреть подсказку');
-    container.replaceChildren(card);
-  });
-
-  document.getElementById('next-btn').addEventListener('click', () => {
-    splitHeader.style.display = 'none';
-    currentIndex = (currentIndex + 1) % cardsData.length;
-    render();
-  });
-
-  document.getElementById('prev-btn').addEventListener('click', () => {
-    splitHeader.style.display = 'none';
-    currentIndex = (currentIndex - 1 + cardsData.length) % cardsData.length;
-    render();
-  });
-
-  // Первый рендер
-  render();
-});
-</script>
-
-</body>
-</html>
+      fro
