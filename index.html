@@ -40,6 +40,13 @@
     }
     .card-back{ background:rgba(234,234,234,.88); font-style:italic; color:#444; }
 
+    /* фронт — жирный и с заглавной буквы для каждого слова */
+    .card-front{
+      font-weight:700;
+      letter-spacing:.3px;
+      text-transform:capitalize; /* работает и для кириллицы */
+    }
+
     /* Fallback: show/hide */
     .card .card-back{ display:none; }
     .card.flipped .card-front{ display:none; }
@@ -97,7 +104,7 @@
 
 <script>
 (function(){
-  /* ---- ДАННЫЕ: каждый объект = ФРОНТ (бэки не считаем в прогресс) ---- */
+  /* --- ДАННЫЕ (каждый объект = ФРОНТ, бэки в прогресс не входят) --- */
   var cardsData = [
     { type: 'single', front: 'Земля',  back: 'Ресурсы, сельское хозяйство, недвижимость' },
     { type: 'single', front: 'Вода',   back: 'Продажа питьевой воды, гидроэнергетика, туризм' },
@@ -117,21 +124,21 @@
       texts:  ['Стеллажи, каркасы столов, уличные кашпо.', 'Турники, стойки для штанги, кронштейны, крепёжные комплекты.'] },
 
     /* --- НОВЫЕ ФРОНТЫ --- */
-    { type: 'multi', front: 'БЛЕСТКИ',
+    { type: 'multi', front: 'Блестки',
       labels: ['Косметика', 'Одежда и аксессуары'],
       texts: [
         'Косметика: тени, хайлайтеры, лаки для ногтей.',
         'Одежда и аксессуары: ткани с блёстками, сумки, украшения.'
       ] },
 
-    { type: 'multi', front: 'ПЕСОК',
+    { type: 'multi', front: 'Песок',
       labels: ['Стекло', 'Строительные материалы'],
       texts: [
         'Плавишь песок → получаешь стекло (окна, бутылки, зеркала, экраны телефонов). Заводы готовы платить за огромные партии очищенного кварцевого песка.',
         'Строительные материалы. Песок добавляют в бетон и цемент. Кирпичи, плитка, асфальт — почти всё это делается с песком.'
       ] },
 
-    { type: 'multi', front: 'СМОЛА',
+    { type: 'multi', front: 'Смола',
       labels: ['Клей', 'Музыкальные инструменты'],
       texts: [
         'Производство клея.',
@@ -140,6 +147,7 @@
   ];
 
   var currentIndex = 0;
+  var started = false;          // защита от двойной инициализации
   var container, splitHeader, splitTitleEl, collapseBtn, progressEl;
 
   function clearAndAppend() {
@@ -154,10 +162,20 @@
     return b;
   }
 
+  // аккуратный Title Case для фронтов (кириллица тоже)
+  function titleCase(str){
+    return String(str)
+      .toLowerCase()
+      .split(/(\s+|-)/)          // сохраняем пробелы/дефисы
+      .map(function(part){ return /^[\s-]+$/.test(part) ? part
+        : part.charAt(0).toUpperCase() + part.slice(1); })
+      .join('');
+  }
+
   function createFlipCard(frontText, backText, i, total){
     var wrapper = document.createElement('div'); wrapper.className = 'card'; wrapper.tabIndex = 0;
     var inner = document.createElement('div');   inner.className = 'card-inner';
-    var front = document.createElement('div');   front.className = 'card-front'; front.textContent = frontText;
+    var front = document.createElement('div');   front.className = 'card-front'; front.textContent = titleCase(frontText);
     front.appendChild(makeBadge(i, total));
     var back  = document.createElement('div');   back.className  = 'card-back';  back.textContent  = backText;
     inner.appendChild(front); inner.appendChild(back); wrapper.appendChild(inner);
@@ -170,7 +188,7 @@
   function createMultiFrontCard(title, onOpen, i, total){
     var wrapper = document.createElement('div'); wrapper.className = 'card'; wrapper.tabIndex = 0;
     var inner = document.createElement('div');   inner.className = 'card-inner';
-    var front = document.createElement('div');   front.className = 'card-front'; front.textContent = title;
+    var front = document.createElement('div');   front.className = 'card-front'; front.textContent = titleCase(title);
     front.appendChild(makeBadge(i, total));
     var back  = document.createElement('div');   back.className  = 'card-back';  back.textContent = '';
     inner.appendChild(front); inner.appendChild(back); wrapper.appendChild(inner);
@@ -198,7 +216,7 @@
   }
 
   function renderMultiSplit(item){
-    splitTitleEl.textContent = item.front;
+    splitTitleEl.textContent = titleCase(item.front);
     splitHeader.style.display = 'flex';
     clearAndAppend(
       createInfoCard(item.labels[0], item.texts[0]),
@@ -214,7 +232,7 @@
   }
 
   function bindControls(){
-    collapseBtn.addEventListener('click', function () {
+    document.getElementById('collapse-split').addEventListener('click', function () {
       var item = cardsData[currentIndex];
       renderMultiFront(item);
     });
@@ -229,18 +247,24 @@
   }
 
   function init(){
+    if (started) return;   // <-- защита от повтора
+    started = true;
+
     container    = document.getElementById('card-container');
     splitHeader  = document.getElementById('split-header');
     splitTitleEl = document.getElementById('split-title');
-    collapseBtn  = document.getElementById('collapse-split');
     progressEl   = document.getElementById('progress');
-    if (!container || !splitHeader || !splitTitleEl || !collapseBtn || !progressEl) { setTimeout(init, 50); return; }
+
     bindControls();
     render();
   }
 
-  if (document.readyState === 'complete' || document.readyState === 'interactive') init();
-  else { document.addEventListener('DOMContentLoaded', init); window.addEventListener('load', init); }
+  // один гарантированный запуск
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init, { once:true });
+  } else {
+    init();
+  }
 })();
 </script>
 
