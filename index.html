@@ -15,8 +15,8 @@
     h1{ margin-bottom:10px; }
     .rules{ font-size:16px; max-width:720px; text-align:center; margin-bottom:10px; color:#333; }
 
-    /* Нумерация только над карточкой */
-    #progress { font-size:14px; margin-bottom:10px; color:#111; font-weight:700; }
+    /* Счётчик над карточкой — только X / Y */
+    #progress{ font-size:14px; font-weight:700; color:#111; margin:6px 0 10px; }
 
     #split-header{ display:none; align-items:center; gap:10px; margin-bottom:10px; font-size:14px; color:#333; }
     #split-title{ font-weight:600; opacity:.9; }
@@ -39,7 +39,7 @@
       border-radius:12px; border:1px solid #ccc; text-align:center;
       background:rgba(255,255,255,.88);
     }
-    .card-front{ font-weight:700; letter-spacing:.3px; }  /* <- без text-transform */
+    .card-front{ font-weight:700; letter-spacing:.3px; } /* без text-transform — всё делает JS */
     .card-back{ background:rgba(234,234,234,.88); font-style:italic; color:#444; }
 
     /* Fallback show/hide */
@@ -93,7 +93,7 @@
 
 <script>
 (function(){
-  /* --- данные: каждый объект = ФРОНТ (бэки не считаем) --- */
+  /* ——— ВХОДНЫЕ ДАННЫЕ (фронты в любом регистре — мы нормализуем) ——— */
   var cardsData = [
     { type: 'single', front: 'ЗЕМЛЯ',  back: 'Ресурсы, сельское хозяйство, недвижимость' },
     { type: 'single', front: 'ВОДА',   back: 'Продажа питьевой воды, гидроэнергетика, туризм' },
@@ -140,26 +140,31 @@
   var container, splitHeader, progressEl;
 
   /* ——— Утилиты ——— */
-  function clearAndAppend() {
-    container.innerHTML = '';
-    for (var i = 0; i < arguments.length; i++) container.appendChild(arguments[i]);
-  }
-
-  // Title Case для кириллицы
   function titleCase(str){
     return String(str)
       .toLowerCase()
       .split(/(\s+|-)/)
-      .map(function(part){ return /^[\s-]+$/.test(part) ? part
-        : part.charAt(0).toUpperCase() + part.slice(1); })
+      .map(function(part){
+        return /^[\s-]+$/.test(part) ? part : part.charAt(0).toUpperCase() + part.slice(1);
+      })
       .join('');
+  }
+
+  // Нормализуем фронты ОДИН РАЗ (исключает любые расхождения)
+  cardsData = cardsData.map(function(it){
+    return Object.assign({}, it, { front: titleCase(it.front) });
+  });
+
+  function clearAndAppend() {
+    container.innerHTML = '';
+    for (var i = 0; i < arguments.length; i++) container.appendChild(arguments[i]);
   }
 
   /* ——— Фабрики ——— */
   function createFlipCard(frontText, backText){
     var wrapper = document.createElement('div'); wrapper.className = 'card'; wrapper.tabIndex = 0;
     var inner = document.createElement('div');   inner.className = 'card-inner';
-    var front = document.createElement('div');   front.className = 'card-front'; front.textContent = titleCase(frontText);
+    var front = document.createElement('div');   front.className = 'card-front'; front.textContent = frontText;
     var back  = document.createElement('div');   back.className  = 'card-back';  back.textContent  = backText;
     inner.appendChild(front); inner.appendChild(back); wrapper.appendChild(inner);
     function toggle(){ wrapper.classList.toggle('flipped'); }
@@ -171,7 +176,7 @@
   function createMultiFrontCard(title, onOpen){
     var wrapper = document.createElement('div'); wrapper.className = 'card'; wrapper.tabIndex = 0;
     var inner = document.createElement('div');   inner.className = 'card-inner';
-    var front = document.createElement('div');   front.className = 'card-front'; front.textContent = titleCase(title);
+    var front = document.createElement('div');   front.className = 'card-front'; front.textContent = title;
     var back  = document.createElement('div');   back.className  = 'card-back';  back.textContent = '';
     inner.appendChild(front); inner.appendChild(back); wrapper.appendChild(inner);
     function open(){ if (onOpen) onOpen(); }
@@ -199,7 +204,7 @@
   }
 
   function renderMultiSplit(item){
-    document.getElementById('split-title').textContent = titleCase(item.front);
+    document.getElementById('split-title').textContent = item.front;
     splitHeader.style.display = 'flex';
     clearAndAppend(
       createInfoCard(item.labels[0], item.texts[0]),
@@ -211,11 +216,10 @@
     var item = cardsData[currentIndex];
     if (item.type === 'single') renderSingle(item);
     else renderMultiFront(item);
-    // Нумератор только сверху, формат X / Y
-    progressEl.textContent = (currentIndex + 1) + ' / ' + cardsData.length;
+    progressEl.textContent = (currentIndex + 1) + ' / ' + cardsData.length; // только X / Y
   }
 
-  /* ——— Навигация с замком от двойных кликов ——— */
+  /* ——— Навигация с замком ——— */
   function go(delta){
     if (navLock) return;
     navLock = true;
