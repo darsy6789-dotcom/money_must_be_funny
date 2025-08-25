@@ -15,6 +15,7 @@
     h1{ margin-bottom:10px; }
     .rules{ font-size:16px; max-width:720px; text-align:center; margin-bottom:10px; color:#333; }
 
+    /* Нумерация только тут */
     #progress { font-size:14px; margin-bottom:20px; color:#111; }
 
     #split-header{ display:none; align-items:center; gap:10px; margin-bottom:10px; font-size:14px; color:#333; }
@@ -40,11 +41,11 @@
     }
     .card-back{ background:rgba(234,234,234,.88); font-style:italic; color:#444; }
 
-    /* фронт — жирный и с заглавной буквы для каждого слова */
+    /* фронт — жирный и с заглавной буквы каждого слова */
     .card-front{
       font-weight:700;
       letter-spacing:.3px;
-      text-transform:capitalize; /* работает и для кириллицы */
+      text-transform:capitalize; /* для кириллицы тоже работает */
     }
 
     /* Fallback: show/hide */
@@ -59,12 +60,6 @@
       .card.flipped .card-inner{ transform:rotateY(180deg); }
       .card-front, .card-back{ backface-visibility:hidden; display:flex; }
       .card-back{ transform:rotateY(180deg); }
-    }
-
-    .badge{
-      position:absolute; top:8px; right:10px;
-      background:#111; color:#fff; font-size:12px; line-height:1;
-      padding:6px 8px; border-radius:999px; opacity:.85;
     }
 
     .card-static{
@@ -104,7 +99,7 @@
 
 <script>
 (function(){
-  /* --- ДАННЫЕ (каждый объект = ФРОНТ, бэки в прогресс не входят) --- */
+  /* --- ДАННЫЕ: каждый объект = ФРОНТ (бэки в прогресс не считаются) --- */
   var cardsData = [
     { type: 'single', front: 'Земля',  back: 'Ресурсы, сельское хозяйство, недвижимость' },
     { type: 'single', front: 'Вода',   back: 'Продажа питьевой воды, гидроэнергетика, туризм' },
@@ -123,7 +118,6 @@
       labels: ['Малые архитектурные формы', 'Спорт/дом'],
       texts:  ['Стеллажи, каркасы столов, уличные кашпо.', 'Турники, стойки для штанги, кронштейны, крепёжные комплекты.'] },
 
-    /* --- НОВЫЕ ФРОНТЫ --- */
     { type: 'multi', front: 'Блестки',
       labels: ['Косметика', 'Одежда и аксессуары'],
       texts: [
@@ -147,36 +141,28 @@
   ];
 
   var currentIndex = 0;
-  var started = false;          // защита от двойной инициализации
-  var container, splitHeader, splitTitleEl, collapseBtn, progressEl;
+  var started = false;      // защита от повторного init
+  var navLock = false;      // замок от «двойных кликов»
+  var container, splitHeader, splitTitleEl, progressEl;
 
   function clearAndAppend() {
     container.innerHTML = '';
     for (var i = 0; i < arguments.length; i++) container.appendChild(arguments[i]);
   }
 
-  function makeBadge(i, total){
-    var b = document.createElement('div');
-    b.className = 'badge';
-    b.textContent = (i+1) + ' / ' + total;
-    return b;
-  }
-
-  // аккуратный Title Case для фронтов (кириллица тоже)
   function titleCase(str){
     return String(str)
       .toLowerCase()
-      .split(/(\s+|-)/)          // сохраняем пробелы/дефисы
+      .split(/(\s+|-)/)
       .map(function(part){ return /^[\s-]+$/.test(part) ? part
         : part.charAt(0).toUpperCase() + part.slice(1); })
       .join('');
   }
 
-  function createFlipCard(frontText, backText, i, total){
+  function createFlipCard(frontText, backText){
     var wrapper = document.createElement('div'); wrapper.className = 'card'; wrapper.tabIndex = 0;
     var inner = document.createElement('div');   inner.className = 'card-inner';
     var front = document.createElement('div');   front.className = 'card-front'; front.textContent = titleCase(frontText);
-    front.appendChild(makeBadge(i, total));
     var back  = document.createElement('div');   back.className  = 'card-back';  back.textContent  = backText;
     inner.appendChild(front); inner.appendChild(back); wrapper.appendChild(inner);
     function toggle(){ wrapper.classList.toggle('flipped'); }
@@ -185,11 +171,10 @@
     return wrapper;
   }
 
-  function createMultiFrontCard(title, onOpen, i, total){
+  function createMultiFrontCard(title, onOpen){
     var wrapper = document.createElement('div'); wrapper.className = 'card'; wrapper.tabIndex = 0;
     var inner = document.createElement('div');   inner.className = 'card-inner';
     var front = document.createElement('div');   front.className = 'card-front'; front.textContent = titleCase(title);
-    front.appendChild(makeBadge(i, total));
     var back  = document.createElement('div');   back.className  = 'card-back';  back.textContent = '';
     inner.appendChild(front); inner.appendChild(back); wrapper.appendChild(inner);
     function open(){ if (onOpen) onOpen(); }
@@ -207,16 +192,16 @@
 
   function renderSingle(item){
     splitHeader.style.display = 'none';
-    clearAndAppend(createFlipCard(item.front, item.back, currentIndex, cardsData.length));
+    clearAndAppend(createFlipCard(item.front, item.back));
   }
 
   function renderMultiFront(item){
     splitHeader.style.display = 'none';
-    clearAndAppend(createMultiFrontCard(item.front, function(){ renderMultiSplit(item); }, currentIndex, cardsData.length));
+    clearAndAppend(createMultiFrontCard(item.front, function(){ renderMultiSplit(item); }));
   }
 
   function renderMultiSplit(item){
-    splitTitleEl.textContent = titleCase(item.front);
+    document.getElementById('split-title').textContent = titleCase(item.front);
     splitHeader.style.display = 'flex';
     clearAndAppend(
       createInfoCard(item.labels[0], item.texts[0]),
@@ -231,35 +216,35 @@
     progressEl.textContent = 'Карточка ' + (currentIndex + 1) + ' из ' + cardsData.length;
   }
 
+  function go(delta){
+    if (navLock) return;
+    navLock = true;
+    currentIndex = (currentIndex + delta + cardsData.length) % cardsData.length;
+    render();
+    setTimeout(function(){ navLock = false; }, 120); // небольшой «антидаблклик»
+  }
+
   function bindControls(){
     document.getElementById('collapse-split').addEventListener('click', function () {
       var item = cardsData[currentIndex];
       renderMultiFront(item);
     });
-    document.getElementById('next-btn').addEventListener('click', function () {
-      currentIndex = (currentIndex + 1) % cardsData.length;
-      render();
-    });
-    document.getElementById('prev-btn').addEventListener('click', function () {
-      currentIndex = (currentIndex - 1 + cardsData.length) % cardsData.length;
-      render();
-    });
+    document.getElementById('next-btn').addEventListener('click', function(){ go(1); });
+    document.getElementById('prev-btn').addEventListener('click', function(){ go(-1); });
   }
 
   function init(){
-    if (started) return;   // <-- защита от повтора
+    if (started) return;  // не даём запуститься второй раз
     started = true;
 
     container    = document.getElementById('card-container');
     splitHeader  = document.getElementById('split-header');
-    splitTitleEl = document.getElementById('split-title');
     progressEl   = document.getElementById('progress');
 
     bindControls();
     render();
   }
 
-  // один гарантированный запуск
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init, { once:true });
   } else {
