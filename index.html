@@ -15,7 +15,7 @@
     h1{ margin-bottom:10px; }
     .rules{ font-size:16px; max-width:720px; text-align:center; margin-bottom:10px; color:#333; }
 
-    /* индикатор прогресса */
+    /* индикатор прогресса (считает только фронты) */
     #progress { font-size:14px; margin-bottom:20px; color:#555; }
 
     #split-header{ display:none; align-items:center; gap:10px; margin-bottom:10px; font-size:14px; color:#333; }
@@ -82,24 +82,27 @@
 
 <script>
 (function(){
-  // --- данные ---
+  // --- данные (каждый объект = фронт; бэки не считаются в прогресс) ---
   var cardsData = [
     { type: 'single', front: 'Земля',  back: 'Ресурсы, сельское хозяйство, недвижимость' },
     { type: 'single', front: 'Вода',   back: 'Продажа питьевой воды, гидроэнергетика, туризм' },
     { type: 'single', front: 'Огонь',  back: 'Энергетика, обогрев, кулинария' },
     { type: 'single', front: 'Воздух', back: 'Туризм, воздух в баллонах, реклама на воздушных шарах' },
+
     { type: 'multi', front: 'Хлопок',
       labels: ['Одежда и базовые изделия', 'Домашний декор'],
       texts:  ['Футболки, постельное бельё, полотенца, пижамы.', 'Шторы, скатерти, пледы, чехлы на мебель.'] },
+
     { type: 'multi', front: 'Шерсть',
       labels: ['Тёплые изделия', 'Интерьер'],
       texts:  ['Свитера, носки, варежки, шарфы, пледы (меринос, альпака, смесь).', 'Шерстяные покрывала, ковры, подушки, панно из войлока.'] },
+
     { type: 'multi', front: 'Сталь',
       labels: ['Малые архитектурные формы', 'Спорт/дом'],
       texts:  ['Стеллажи, каркасы столов, уличные кашпо.', 'Турники, стойки для штанги, кронштейны, крепёжные комплекты.'] },
 
-    // новые карточки
-    { type: 'multi', front: 'БЛЁСТКИ',
+    /* Новые предметы по твоему ТЗ */
+    { type: 'multi', front: 'БЛЕСТКИ',
       labels: ['Косметика', 'Одежда и аксессуары'],
       texts: [
         'Косметика: тени, хайлайтеры, лаки для ногтей.',
@@ -122,15 +125,115 @@
   ];
 
   var currentIndex = 0;
-
   var container, splitHeader, splitTitleEl, collapseBtn, progressEl;
 
+  // утилита
   function clearAndAppend() {
     container.innerHTML = '';
-    for (var i = 0; i < arguments.length; i++) {
-      container.appendChild(arguments[i]);
-    }
+    for (var i = 0; i < arguments.length; i++) container.appendChild(arguments[i]);
   }
 
+  // фабрики
   function createFlipCard(frontText, backText){
-    var
+    var wrapper = document.createElement('div'); wrapper.className = 'card';
+    var inner = document.createElement('div');   inner.className = 'card-inner';
+    var front = document.createElement('div');   front.className = 'card-front'; front.textContent = frontText;
+    var back  = document.createElement('div');   back.className  = 'card-back';  back.textContent  = backText;
+    inner.appendChild(front); inner.appendChild(back); wrapper.appendChild(inner);
+    wrapper.addEventListener('click', function(e){ e.stopPropagation(); wrapper.classList.toggle('flipped'); });
+    return wrapper;
+  }
+
+  function createMultiFrontCard(title, onOpen){
+    var wrapper = document.createElement('div'); wrapper.className = 'card';
+    var inner = document.createElement('div');   inner.className = 'card-inner';
+    var front = document.createElement('div');   front.className = 'card-front'; front.textContent = title;
+    var back  = document.createElement('div');   back.className  = 'card-back';  back.textContent = '';
+    inner.appendChild(front); inner.appendChild(back); wrapper.appendChild(inner);
+    wrapper.addEventListener('click', function(){ if (onOpen) onOpen(); });
+    return wrapper;
+  }
+
+  function createInfoCard(title, text){
+    var box = document.createElement('div'); box.className = 'card-static';
+    var t = document.createElement('div');   t.className = 'card-title'; t.textContent = title;
+    var d = document.createElement('div');   d.className = 'card-text';  d.textContent = text;
+    box.appendChild(t); box.appendChild(d); return box;
+  }
+
+  // рендеры
+  function renderSingle(item){
+    splitHeader.style.display = 'none';
+    clearAndAppend(createFlipCard(item.front, item.back));
+  }
+
+  function renderMultiFront(item){
+    splitHeader.style.display = 'none';
+    clearAndAppend(createMultiFrontCard(item.front, function(){ renderMultiSplit(item); }));
+  }
+
+  function renderMultiSplit(item){
+    splitTitleEl.textContent = item.front;
+    splitHeader.style.display = 'flex';
+    clearAndAppend(
+      createInfoCard(item.labels[0], item.texts[0]),
+      createInfoCard(item.labels[1], item.texts[1])
+    );
+  }
+
+  function render(){
+    var item = cardsData[currentIndex];
+    if (item.type === 'single') renderSingle(item);
+    else renderMultiFront(item);
+    updateProgress();
+  }
+
+  // прогресс (только фронты)
+  function updateProgress(){
+    progressEl.textContent = 'Карточка ' + (currentIndex + 1) + ' из ' + cardsData.length;
+  }
+
+  // управление
+  function bindControls(){
+    collapseBtn.addEventListener('click', function () {
+      var item = cardsData[currentIndex];
+      renderMultiFront(item);
+    });
+
+    document.getElementById('next-btn').addEventListener('click', function () {
+      currentIndex = (currentIndex + 1) % cardsData.length;
+      render();
+    });
+
+    document.getElementById('prev-btn').addEventListener('click', function () {
+      currentIndex = (currentIndex - 1 + cardsData.length) % cardsData.length;
+      render();
+    });
+  }
+
+  // инициализация
+  function init(){
+    container    = document.getElementById('card-container');
+    splitHeader  = document.getElementById('split-header');
+    splitTitleEl = document.getElementById('split-title');
+    collapseBtn  = document.getElementById('collapse-split');
+    progressEl   = document.getElementById('progress');
+
+    if (!container || !splitHeader || !splitTitleEl || !collapseBtn || !progressEl) {
+      setTimeout(init, 50);
+      return;
+    }
+    bindControls();
+    render();
+  }
+
+  if (document.readyState === 'complete' || document.readyState === 'interactive') init();
+  else {
+    document.addEventListener('DOMContentLoaded', init);
+    window.addEventListener('load', init);
+  }
+})();
+</script>
+
+</body>
+</html>
