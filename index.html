@@ -15,8 +15,8 @@
     h1{ margin-bottom:10px; }
     .rules{ font-size:16px; max-width:720px; text-align:center; margin-bottom:10px; color:#333; }
 
-    /* Нумерация только тут */
-    #progress { font-size:14px; margin-bottom:20px; color:#111; }
+    /* Нумерация только над карточкой */
+    #progress { font-size:14px; margin-bottom:10px; color:#111; font-weight:700; }
 
     #split-header{ display:none; align-items:center; gap:10px; margin-bottom:10px; font-size:14px; color:#333; }
     #split-title{ font-weight:600; opacity:.9; }
@@ -39,21 +39,15 @@
       border-radius:12px; border:1px solid #ccc; text-align:center;
       background:rgba(255,255,255,.88);
     }
+    .card-front{ font-weight:700; letter-spacing:.3px; }  /* <- без text-transform */
     .card-back{ background:rgba(234,234,234,.88); font-style:italic; color:#444; }
 
-    /* фронт — жирный и с заглавной буквы каждого слова */
-    .card-front{
-      font-weight:700;
-      letter-spacing:.3px;
-      text-transform:capitalize; /* для кириллицы тоже работает */
-    }
-
-    /* Fallback: show/hide */
+    /* Fallback show/hide */
     .card .card-back{ display:none; }
     .card.flipped .card-front{ display:none; }
     .card.flipped .card-back{ display:flex; }
 
-    /* Flip, если 3D доступен */
+    /* Flip, если доступен 3D */
     @supports ((transform-style: preserve-3d) and (backface-visibility: hidden)) {
       .card{ perspective:1000px; }
       .card-inner{ transform-style:preserve-3d; transition:transform .6s; }
@@ -99,7 +93,7 @@
 
 <script>
 (function(){
-  /* --- ДАННЫЕ: каждый объект = ФРОНТ (бэки в прогресс не считаются) --- */
+  /* --- данные: каждый объект = ФРОНТ (бэки не считаем) --- */
   var cardsData = [
     { type: 'single', front: 'ЗЕМЛЯ',  back: 'Ресурсы, сельское хозяйство, недвижимость' },
     { type: 'single', front: 'ВОДА',   back: 'Продажа питьевой воды, гидроэнергетика, туризм' },
@@ -141,15 +135,17 @@
   ];
 
   var currentIndex = 0;
-  var started = false;      // защита от повторного init
-  var navLock = false;      // замок от «двойных кликов»
-  var container, splitHeader, splitTitleEl, progressEl;
+  var started = false;
+  var navLock = false;
+  var container, splitHeader, progressEl;
 
+  /* ——— Утилиты ——— */
   function clearAndAppend() {
     container.innerHTML = '';
     for (var i = 0; i < arguments.length; i++) container.appendChild(arguments[i]);
   }
 
+  // Title Case для кириллицы
   function titleCase(str){
     return String(str)
       .toLowerCase()
@@ -159,6 +155,7 @@
       .join('');
   }
 
+  /* ——— Фабрики ——— */
   function createFlipCard(frontText, backText){
     var wrapper = document.createElement('div'); wrapper.className = 'card'; wrapper.tabIndex = 0;
     var inner = document.createElement('div');   inner.className = 'card-inner';
@@ -190,6 +187,7 @@
     box.appendChild(t); box.appendChild(d); return box;
   }
 
+  /* ——— Рендер ——— */
   function renderSingle(item){
     splitHeader.style.display = 'none';
     clearAndAppend(createFlipCard(item.front, item.back));
@@ -213,15 +211,17 @@
     var item = cardsData[currentIndex];
     if (item.type === 'single') renderSingle(item);
     else renderMultiFront(item);
-    progressEl.textContent = 'Карточка ' + (currentIndex + 1) + ' из ' + cardsData.length;
+    // Нумератор только сверху, формат X / Y
+    progressEl.textContent = (currentIndex + 1) + ' / ' + cardsData.length;
   }
 
+  /* ——— Навигация с замком от двойных кликов ——— */
   function go(delta){
     if (navLock) return;
     navLock = true;
     currentIndex = (currentIndex + delta + cardsData.length) % cardsData.length;
     render();
-    setTimeout(function(){ navLock = false; }, 120); // небольшой «антидаблклик»
+    setTimeout(function(){ navLock = false; }, 120);
   }
 
   function bindControls(){
@@ -234,13 +234,10 @@
   }
 
   function init(){
-    if (started) return;  // не даём запуститься второй раз
-    started = true;
-
-    container    = document.getElementById('card-container');
-    splitHeader  = document.getElementById('split-header');
-    progressEl   = document.getElementById('progress');
-
+    if (started) return; started = true;
+    container  = document.getElementById('card-container');
+    splitHeader= document.getElementById('split-header');
+    progressEl = document.getElementById('progress');
     bindControls();
     render();
   }
@@ -255,4 +252,3 @@
 
 </body>
 </html>
-
