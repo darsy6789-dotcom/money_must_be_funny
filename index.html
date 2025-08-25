@@ -15,8 +15,7 @@
     h1{ margin-bottom:10px; }
     .rules{ font-size:16px; max-width:720px; text-align:center; margin-bottom:10px; color:#333; }
 
-    /* индикатор прогресса (считает только фронты) */
-    #progress { font-size:14px; margin-bottom:20px; color:#555; }
+    #progress { font-size:14px; margin-bottom:20px; color:#111; }
 
     #split-header{ display:none; align-items:center; gap:10px; margin-bottom:10px; font-size:14px; color:#333; }
     #split-title{ font-weight:600; opacity:.9; }
@@ -31,20 +30,36 @@
       justify-content:center; align-items:stretch; min-height:190px;
     }
 
-    /* Флип-карта (для single и фронта multi) */
-    .card{ width:280px; height:180px; perspective:1000px; cursor:pointer; display:block; }
-    .card-inner{ position:relative; width:100%; height:100%; transform-style:preserve-3d; transition:transform .6s; }
-    .card.flipped .card-inner{ transform:rotateY(180deg); }
+    .card{ width:280px; height:180px; cursor:pointer; display:block; border-radius:12px; }
+    .card-inner{ position:relative; width:100%; height:100%; }
     .card-front, .card-back{
-      position:absolute; inset:0; backface-visibility:hidden;
-      display:flex; align-items:center; justify-content:center;
+      position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
       font-size:18px; padding:10px; box-sizing:border-box;
       border-radius:12px; border:1px solid #ccc; text-align:center;
       background:rgba(255,255,255,.88);
     }
-    .card-back{ transform:rotateY(180deg); background:rgba(234,234,234,.88); font-style:italic; color:#444; }
+    .card-back{ background:rgba(234,234,234,.88); font-style:italic; color:#444; }
 
-    /* Две раскрытые карточки (ответы multi) */
+    /* Fallback: show/hide */
+    .card .card-back{ display:none; }
+    .card.flipped .card-front{ display:none; }
+    .card.flipped .card-back{ display:flex; }
+
+    /* Flip, если 3D доступен */
+    @supports ((transform-style: preserve-3d) and (backface-visibility: hidden)) {
+      .card{ perspective:1000px; }
+      .card-inner{ transform-style:preserve-3d; transition:transform .6s; }
+      .card.flipped .card-inner{ transform:rotateY(180deg); }
+      .card-front, .card-back{ backface-visibility:hidden; display:flex; }
+      .card-back{ transform:rotateY(180deg); }
+    }
+
+    .badge{
+      position:absolute; top:8px; right:10px;
+      background:#111; color:#fff; font-size:12px; line-height:1;
+      padding:6px 8px; border-radius:999px; opacity:.85;
+    }
+
     .card-static{
       width:320px; min-height:180px; display:flex; flex-direction:column; gap:8px;
       padding:14px; border-radius:12px; border:1px solid #ccc; background:rgba(255,255,255,.88); box-sizing:border-box;
@@ -65,7 +80,7 @@
   Твоя задача — монетизировать каждый элемент.
 </div>
 
-<div id="progress"></div>
+<div id="progress" aria-live="polite"></div>
 
 <div id="split-header">
   <button id="collapse-split">← К «<span id="split-title"></span>»</button>
@@ -82,7 +97,7 @@
 
 <script>
 (function(){
-  // --- данные (каждый объект = фронт; бэки не считаются в прогресс) ---
+  /* ---- ДАННЫЕ: каждый объект = ФРОНТ (бэки не считаем в прогресс) ---- */
   var cardsData = [
     { type: 'single', front: 'Земля',  back: 'Ресурсы, сельское хозяйство, недвижимость' },
     { type: 'single', front: 'Вода',   back: 'Продажа питьевой воды, гидроэнергетика, туризм' },
@@ -101,7 +116,7 @@
       labels: ['Малые архитектурные формы', 'Спорт/дом'],
       texts:  ['Стеллажи, каркасы столов, уличные кашпо.', 'Турники, стойки для штанги, кронштейны, крепёжные комплекты.'] },
 
-    /* Новые предметы по твоему ТЗ */
+    /* --- НОВЫЕ ФРОНТЫ --- */
     { type: 'multi', front: 'БЛЕСТКИ',
       labels: ['Косметика', 'Одежда и аксессуары'],
       texts: [
@@ -127,30 +142,41 @@
   var currentIndex = 0;
   var container, splitHeader, splitTitleEl, collapseBtn, progressEl;
 
-  // утилита
   function clearAndAppend() {
     container.innerHTML = '';
     for (var i = 0; i < arguments.length; i++) container.appendChild(arguments[i]);
   }
 
-  // фабрики
-  function createFlipCard(frontText, backText){
-    var wrapper = document.createElement('div'); wrapper.className = 'card';
+  function makeBadge(i, total){
+    var b = document.createElement('div');
+    b.className = 'badge';
+    b.textContent = (i+1) + ' / ' + total;
+    return b;
+  }
+
+  function createFlipCard(frontText, backText, i, total){
+    var wrapper = document.createElement('div'); wrapper.className = 'card'; wrapper.tabIndex = 0;
     var inner = document.createElement('div');   inner.className = 'card-inner';
     var front = document.createElement('div');   front.className = 'card-front'; front.textContent = frontText;
+    front.appendChild(makeBadge(i, total));
     var back  = document.createElement('div');   back.className  = 'card-back';  back.textContent  = backText;
     inner.appendChild(front); inner.appendChild(back); wrapper.appendChild(inner);
-    wrapper.addEventListener('click', function(e){ e.stopPropagation(); wrapper.classList.toggle('flipped'); });
+    function toggle(){ wrapper.classList.toggle('flipped'); }
+    wrapper.addEventListener('click', toggle);
+    wrapper.addEventListener('keydown', function(e){ if (e.key==='Enter'||e.key===' '){ e.preventDefault(); toggle(); }});
     return wrapper;
   }
 
-  function createMultiFrontCard(title, onOpen){
-    var wrapper = document.createElement('div'); wrapper.className = 'card';
+  function createMultiFrontCard(title, onOpen, i, total){
+    var wrapper = document.createElement('div'); wrapper.className = 'card'; wrapper.tabIndex = 0;
     var inner = document.createElement('div');   inner.className = 'card-inner';
     var front = document.createElement('div');   front.className = 'card-front'; front.textContent = title;
+    front.appendChild(makeBadge(i, total));
     var back  = document.createElement('div');   back.className  = 'card-back';  back.textContent = '';
     inner.appendChild(front); inner.appendChild(back); wrapper.appendChild(inner);
-    wrapper.addEventListener('click', function(){ if (onOpen) onOpen(); });
+    function open(){ if (onOpen) onOpen(); }
+    wrapper.addEventListener('click', open);
+    wrapper.addEventListener('keydown', function(e){ if (e.key==='Enter'||e.key===' '){ e.preventDefault(); open(); }});
     return wrapper;
   }
 
@@ -161,15 +187,14 @@
     box.appendChild(t); box.appendChild(d); return box;
   }
 
-  // рендеры
   function renderSingle(item){
     splitHeader.style.display = 'none';
-    clearAndAppend(createFlipCard(item.front, item.back));
+    clearAndAppend(createFlipCard(item.front, item.back, currentIndex, cardsData.length));
   }
 
   function renderMultiFront(item){
     splitHeader.style.display = 'none';
-    clearAndAppend(createMultiFrontCard(item.front, function(){ renderMultiSplit(item); }));
+    clearAndAppend(createMultiFrontCard(item.front, function(){ renderMultiSplit(item); }, currentIndex, cardsData.length));
   }
 
   function renderMultiSplit(item){
@@ -185,53 +210,37 @@
     var item = cardsData[currentIndex];
     if (item.type === 'single') renderSingle(item);
     else renderMultiFront(item);
-    updateProgress();
-  }
-
-  // прогресс (только фронты)
-  function updateProgress(){
     progressEl.textContent = 'Карточка ' + (currentIndex + 1) + ' из ' + cardsData.length;
   }
 
-  // управление
   function bindControls(){
     collapseBtn.addEventListener('click', function () {
       var item = cardsData[currentIndex];
       renderMultiFront(item);
     });
-
     document.getElementById('next-btn').addEventListener('click', function () {
       currentIndex = (currentIndex + 1) % cardsData.length;
       render();
     });
-
     document.getElementById('prev-btn').addEventListener('click', function () {
       currentIndex = (currentIndex - 1 + cardsData.length) % cardsData.length;
       render();
     });
   }
 
-  // инициализация
   function init(){
     container    = document.getElementById('card-container');
     splitHeader  = document.getElementById('split-header');
     splitTitleEl = document.getElementById('split-title');
     collapseBtn  = document.getElementById('collapse-split');
     progressEl   = document.getElementById('progress');
-
-    if (!container || !splitHeader || !splitTitleEl || !collapseBtn || !progressEl) {
-      setTimeout(init, 50);
-      return;
-    }
+    if (!container || !splitHeader || !splitTitleEl || !collapseBtn || !progressEl) { setTimeout(init, 50); return; }
     bindControls();
     render();
   }
 
   if (document.readyState === 'complete' || document.readyState === 'interactive') init();
-  else {
-    document.addEventListener('DOMContentLoaded', init);
-    window.addEventListener('load', init);
-  }
+  else { document.addEventListener('DOMContentLoaded', init); window.addEventListener('load', init); }
 })();
 </script>
 
