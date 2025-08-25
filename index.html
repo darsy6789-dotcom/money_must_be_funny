@@ -13,7 +13,10 @@
         url("./money-fire.png") center/cover no-repeat fixed;
     }
     h1{ margin-bottom:10px; }
-    .rules{ font-size:16px; max-width:720px; text-align:center; margin-bottom:20px; color:#333; }
+    .rules{ font-size:16px; max-width:720px; text-align:center; margin-bottom:10px; color:#333; }
+
+    /* индикатор прогресса */
+    #progress { font-size:14px; margin-bottom:20px; color:#555; }
 
     #split-header{ display:none; align-items:center; gap:10px; margin-bottom:10px; font-size:14px; color:#333; }
     #split-title{ font-weight:600; opacity:.9; }
@@ -62,6 +65,8 @@
   Твоя задача — монетизировать каждый элемент.
 </div>
 
+<div id="progress"></div>
+
 <div id="split-header">
   <button id="collapse-split">← К «<span id="split-title"></span>»</button>
 </div>
@@ -91,14 +96,35 @@
       texts:  ['Свитера, носки, варежки, шарфы, пледы (меринос, альпака, смесь).', 'Шерстяные покрывала, ковры, подушки, панно из войлока.'] },
     { type: 'multi', front: 'Сталь',
       labels: ['Малые архитектурные формы', 'Спорт/дом'],
-      texts:  ['Стеллажи, каркасы столов, уличные кашпо.', 'Турники, стойки для штанги, кронштейны, крепёжные комплекты.'] }
+      texts:  ['Стеллажи, каркасы столов, уличные кашпо.', 'Турники, стойки для штанги, кронштейны, крепёжные комплекты.'] },
+
+    // новые карточки
+    { type: 'multi', front: 'БЛЁСТКИ',
+      labels: ['Косметика', 'Одежда и аксессуары'],
+      texts: [
+        'Косметика: тени, хайлайтеры, лаки для ногтей.',
+        'Одежда и аксессуары: ткани с блёстками, сумки, украшения.'
+      ] },
+
+    { type: 'multi', front: 'ПЕСОК',
+      labels: ['Стекло', 'Строительные материалы'],
+      texts: [
+        'Плавишь песок → получаешь стекло (окна, бутылки, зеркала, экраны телефонов). Заводы готовы платить за огромные партии очищенного кварцевого песка.',
+        'Строительные материалы. Песок добавляют в бетон и цемент. Кирпичи, плитка, асфальт — почти всё это делается с песком.'
+      ] },
+
+    { type: 'multi', front: 'СМОЛА',
+      labels: ['Клей', 'Музыкальные инструменты'],
+      texts: [
+        'Производство клея.',
+        'Использовать для производства лака/смолы для скрипок и музыкальных инструментов.'
+      ] }
   ];
 
   var currentIndex = 0;
 
-  var container, splitHeader, splitTitleEl, collapseBtn;
+  var container, splitHeader, splitTitleEl, collapseBtn, progressEl;
 
-  // --- утилита совместимой вставки ---
   function clearAndAppend() {
     container.innerHTML = '';
     for (var i = 0; i < arguments.length; i++) {
@@ -106,102 +132,5 @@
     }
   }
 
-  // --- фабрики ---
   function createFlipCard(frontText, backText){
-    var wrapper = document.createElement('div'); wrapper.className = 'card';
-    var inner = document.createElement('div');   inner.className = 'card-inner';
-    var front = document.createElement('div');   front.className = 'card-front'; front.textContent = frontText;
-    var back  = document.createElement('div');   back.className  = 'card-back';  back.textContent  = backText;
-    inner.appendChild(front); inner.appendChild(back); wrapper.appendChild(inner);
-    wrapper.addEventListener('click', function(e){ e.stopPropagation(); wrapper.classList.toggle('flipped'); });
-    return wrapper;
-  }
-
-  // фронт мульти: по клику раскрываем 2 карточки
-  function createMultiFrontCard(title, onOpen){
-    var wrapper = document.createElement('div'); wrapper.className = 'card';
-    var inner = document.createElement('div');   inner.className = 'card-inner';
-    var front = document.createElement('div');   front.className = 'card-front'; front.textContent = title;
-    var back  = document.createElement('div');   back.className  = 'card-back';  back.textContent  = ''; // без подсказки
-    inner.appendChild(front); inner.appendChild(back); wrapper.appendChild(inner);
-    wrapper.addEventListener('click', function(){ if (onOpen) onOpen(); });
-    return wrapper;
-  }
-
-  function createInfoCard(title, text){
-    var box = document.createElement('div'); box.className = 'card-static';
-    var t = document.createElement('div');   t.className = 'card-title'; t.textContent = title;
-    var d = document.createElement('div');   d.className = 'card-text';  d.textContent = text;
-    box.appendChild(t); box.appendChild(d); return box;
-  }
-
-  // --- рендеры ---
-  function renderSingle(item){
-    splitHeader.style.display = 'none';
-    clearAndAppend(createFlipCard(item.front, item.back));
-  }
-
-  function renderMultiFront(item){
-    splitHeader.style.display = 'none';
-    clearAndAppend(createMultiFrontCard(item.front, function(){ renderMultiSplit(item); }));
-  }
-
-  function renderMultiSplit(item){
-    splitTitleEl.textContent = item.front;
-    splitHeader.style.display = 'flex';
-    clearAndAppend(
-      createInfoCard(item.labels[0], item.texts[0]),
-      createInfoCard(item.labels[1], item.texts[1])
-    );
-  }
-
-  function render(){
-    var item = cardsData[currentIndex];
-    if (item.type === 'single') renderSingle(item);
-    else renderMultiFront(item);
-  }
-
-  // --- управление ---
-  function bindControls(){
-    collapseBtn.addEventListener('click', function () {
-      var item = cardsData[currentIndex];
-      renderMultiFront(item);
-    });
-
-    document.getElementById('next-btn').addEventListener('click', function () {
-      currentIndex = (currentIndex + 1) % cardsData.length;
-      render();
-    });
-
-    document.getElementById('prev-btn').addEventListener('click', function () {
-      currentIndex = (currentIndex - 1 + cardsData.length) % cardsData.length;
-      render();
-    });
-  }
-
-  // --- инициализация с «двойной страховкой» ---
-  function init(){
-    container    = document.getElementById('card-container');
-    splitHeader  = document.getElementById('split-header');
-    splitTitleEl = document.getElementById('split-title');
-    collapseBtn  = document.getElementById('collapse-split');
-
-    if (!container || !splitHeader || !splitTitleEl || !collapseBtn) {
-      setTimeout(init, 50);
-      return;
-    }
-    bindControls();
-    render();
-  }
-
-  if (document.readyState === 'complete' || document.readyState === 'interactive') {
-    init();
-  } else {
-    document.addEventListener('DOMContentLoaded', init);
-    window.addEventListener('load', init);
-  }
-})();
-</script>
-
-</body>
-</html>
+    var
