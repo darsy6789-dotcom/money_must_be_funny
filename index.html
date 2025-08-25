@@ -13,10 +13,14 @@
         url("./money-fire.png") center/cover no-repeat fixed;
     }
     h1{ margin-bottom:10px; }
-    .rules{ font-size:16px; max-width:720px; text-align:center; margin-bottom:10px; color:#333; }
+    .rules{ font-size:16px; max-width:720px; text-align:center; margin-bottom:8px; color:#333; }
 
-    /* Счётчик над карточкой — только X / Y */
-    #progress{ font-size:14px; font-weight:700; color:#111; margin:6px 0 10px; }
+    /* Счётчик над карточкой — в чёрной «пилюле» */
+    #progress{
+      font-size:14px; font-weight:700; color:#fff;
+      background:#111; padding:6px 12px; border-radius:999px;
+      display:inline-block; margin:6px 0 12px;
+    }
 
     #split-header{ display:none; align-items:center; gap:10px; margin-bottom:10px; font-size:14px; color:#333; }
     #split-title{ font-weight:600; opacity:.9; }
@@ -39,7 +43,8 @@
       border-radius:12px; border:1px solid #ccc; text-align:center;
       background:rgba(255,255,255,.88);
     }
-    .card-front{ font-weight:700; letter-spacing:.3px; } /* без text-transform — всё делает JS */
+    /* Фронт — всегда КАПСОМ */
+    .card-front{ font-weight:700; letter-spacing:.3px; text-transform:uppercase; }
     .card-back{ background:rgba(234,234,234,.88); font-style:italic; color:#444; }
 
     /* Fallback show/hide */
@@ -47,7 +52,7 @@
     .card.flipped .card-front{ display:none; }
     .card.flipped .card-back{ display:flex; }
 
-    /* Flip, если доступен 3D */
+    /* Красивый флип при наличии 3D */
     @supports ((transform-style: preserve-3d) and (backface-visibility: hidden)) {
       .card{ perspective:1000px; }
       .card-inner{ transform-style:preserve-3d; transition:transform .6s; }
@@ -93,40 +98,40 @@
 
 <script>
 (function(){
-  /* ——— ВХОДНЫЕ ДАННЫЕ (фронты в любом регистре — мы нормализуем) ——— */
+  /* ——— данные (каждый объект = ФРОНТ; бэки в прогресс не входят) ——— */
   var cardsData = [
-    { type: 'single', front: 'ЗЕМЛЯ',  back: 'Ресурсы, сельское хозяйство, недвижимость' },
-    { type: 'single', front: 'ВОДА',   back: 'Продажа питьевой воды, гидроэнергетика, туризм' },
-    { type: 'single', front: 'ОГОНЬ',  back: 'Энергетика, обогрев, кулинария' },
-    { type: 'single', front: 'ВОЗДУХ', back: 'Туризм, воздух в баллонах, реклама на воздушных шарах' },
+    { type: 'single', front: 'Земля',  back: 'Ресурсы, сельское хозяйство, недвижимость' },
+    { type: 'single', front: 'Вода',   back: 'Продажа питьевой воды, гидроэнергетика, туризм' },
+    { type: 'single', front: 'Огонь',  back: 'Энергетика, обогрев, кулинария' },
+    { type: 'single', front: 'Воздух', back: 'Туризм, воздух в баллонах, реклама на воздушных шарах' },
 
-    { type: 'multi', front: 'ХЛОПОК',
+    { type: 'multi', front: 'Хлопок',
       labels: ['Одежда и базовые изделия', 'Домашний декор'],
       texts:  ['Футболки, постельное бельё, полотенца, пижамы.', 'Шторы, скатерти, пледы, чехлы на мебель.'] },
 
-    { type: 'multi', front: 'ШЕРСТЬ',
+    { type: 'multi', front: 'Шерсть',
       labels: ['Тёплые изделия', 'Интерьер'],
       texts:  ['Свитера, носки, варежки, шарфы, пледы (меринос, альпака, смесь).', 'Шерстяные покрывала, ковры, подушки, панно из войлока.'] },
 
-    { type: 'multi', front: 'СТАЛЬ',
+    { type: 'multi', front: 'Сталь',
       labels: ['Малые архитектурные формы', 'Спорт/дом'],
       texts:  ['Стеллажи, каркасы столов, уличные кашпо.', 'Турники, стойки для штанги, кронштейны, крепёжные комплекты.'] },
 
-    { type: 'multi', front: 'БЛЁСТКИ',
+    { type: 'multi', front: 'Блёстки',
       labels: ['Косметика', 'Одежда и аксессуары'],
       texts: [
         'Косметика: тени, хайлайтеры, лаки для ногтей.',
         'Одежда и аксессуары: ткани с блёстками, сумки, украшения.'
       ] },
 
-    { type: 'multi', front: 'ПЕСОК',
+    { type: 'multi', front: 'Песок',
       labels: ['Стекло', 'Строительные материалы'],
       texts: [
         'Плавишь песок → получаешь стекло (окна, бутылки, зеркала, экраны телефонов). Заводы готовы платить за огромные партии очищенного кварцевого песка.',
         'Строительные материалы. Песок добавляют в бетон и цемент. Кирпичи, плитка, асфальт — почти всё это делается с песком.'
       ] },
 
-    { type: 'multi', front: 'СМОЛА',
+    { type: 'multi', front: 'Смола',
       labels: ['Клей', 'Музыкальные инструменты'],
       texts: [
         'Производство клея.',
@@ -139,32 +144,27 @@
   var navLock = false;
   var container, splitHeader, progressEl;
 
-  /* ——— Утилиты ——— */
-  function titleCase(str){
-    return String(str)
-      .toLowerCase()
-      .split(/(\s+|-)/)
-      .map(function(part){
-        return /^[\s-]+$/.test(part) ? part : part.charAt(0).toUpperCase() + part.slice(1);
-      })
-      .join('');
-  }
-
-  // Нормализуем фронты ОДИН РАЗ (исключает любые расхождения)
-  cardsData = cardsData.map(function(it){
-    return Object.assign({}, it, { front: titleCase(it.front) });
-  });
-
+  /* ——— утилиты ——— */
   function clearAndAppend() {
     container.innerHTML = '';
     for (var i = 0; i < arguments.length; i++) container.appendChild(arguments[i]);
   }
 
-  /* ——— Фабрики ——— */
+  // Заголовок в шапке разворота — аккуратно «Title Case»
+  function titleCase(str){
+    return String(str)
+      .toLowerCase()
+      .split(/(\s+|-)/)
+      .map(function(part){ return /^[\s-]+$/.test(part) ? part
+        : part.charAt(0).toUpperCase() + part.slice(1); })
+      .join('');
+  }
+
+  /* ——— фабрики ——— */
   function createFlipCard(frontText, backText){
     var wrapper = document.createElement('div'); wrapper.className = 'card'; wrapper.tabIndex = 0;
     var inner = document.createElement('div');   inner.className = 'card-inner';
-    var front = document.createElement('div');   front.className = 'card-front'; front.textContent = frontText;
+    var front = document.createElement('div');   front.className = 'card-front'; front.textContent = frontText.toUpperCase();
     var back  = document.createElement('div');   back.className  = 'card-back';  back.textContent  = backText;
     inner.appendChild(front); inner.appendChild(back); wrapper.appendChild(inner);
     function toggle(){ wrapper.classList.toggle('flipped'); }
@@ -176,7 +176,7 @@
   function createMultiFrontCard(title, onOpen){
     var wrapper = document.createElement('div'); wrapper.className = 'card'; wrapper.tabIndex = 0;
     var inner = document.createElement('div');   inner.className = 'card-inner';
-    var front = document.createElement('div');   front.className = 'card-front'; front.textContent = title;
+    var front = document.createElement('div');   front.className = 'card-front'; front.textContent = title.toUpperCase();
     var back  = document.createElement('div');   back.className  = 'card-back';  back.textContent = '';
     inner.appendChild(front); inner.appendChild(back); wrapper.appendChild(inner);
     function open(){ if (onOpen) onOpen(); }
@@ -192,7 +192,7 @@
     box.appendChild(t); box.appendChild(d); return box;
   }
 
-  /* ——— Рендер ——— */
+  /* ——— рендер ——— */
   function renderSingle(item){
     splitHeader.style.display = 'none';
     clearAndAppend(createFlipCard(item.front, item.back));
@@ -204,7 +204,7 @@
   }
 
   function renderMultiSplit(item){
-    document.getElementById('split-title').textContent = item.front;
+    document.getElementById('split-title').textContent = titleCase(item.front);
     splitHeader.style.display = 'flex';
     clearAndAppend(
       createInfoCard(item.labels[0], item.texts[0]),
@@ -216,10 +216,10 @@
     var item = cardsData[currentIndex];
     if (item.type === 'single') renderSingle(item);
     else renderMultiFront(item);
-    progressEl.textContent = (currentIndex + 1) + ' / ' + cardsData.length; // только X / Y
+    progressEl.textContent = (currentIndex + 1) + ' / ' + cardsData.length;  // только X / Y
   }
 
-  /* ——— Навигация с замком ——— */
+  /* ——— навигация с анти-даблкликом ——— */
   function go(delta){
     if (navLock) return;
     navLock = true;
