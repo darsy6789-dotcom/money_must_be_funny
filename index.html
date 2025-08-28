@@ -72,7 +72,7 @@
     button{ padding:10px 20px; font-size:16px; border:none; background:#4CAF50; color:#fff; border-radius:8px; cursor:pointer; }
     button:hover{ background:#45a049; }
 
-    /* --- Settings modal (добавлено) --- */
+    /* --- Settings modal --- */
     #open-settings{ padding:8px 14px; border-radius:8px; border:1px solid #ccc; background:#f6f6f6; cursor:pointer; }
     #open-settings:hover{ background:#eee; }
 
@@ -104,7 +104,7 @@
   Твоя задача — монетизировать каждый элемент.
 </div>
 
-<!-- КНОПКА И МОДАЛЬНОЕ ОКНО НАСТРОЕК (добавлено) -->
+<!-- КНОПКА И МОДАЛЬНОЕ ОКНО НАСТРОЕК -->
 <button id="open-settings" type="button" style="margin: 12px 0;">Настройки</button>
 
 <div id="settings-overlay" hidden>
@@ -141,7 +141,7 @@
 
 <script>
 (function(){
-  /* ——— данные (каждый объект = ФРОНТ; бэки в прогресс не входят) ——— */
+  /* ——— данные ——— */
   var cardsData = [
     { type: 'single', front: 'Земля',  back: 'Ресурсы, сельское хозяйство, недвижимость' },
     { type: 'single', front: 'Вода',   back: 'Продажа питьевой воды, гидроэнергетика, туризм' },
@@ -182,7 +182,7 @@
       ] }
   ];
 
-  /* ДАЁМ модулю настроек доступ к данным (добавлено) */
+  /* ДАЁМ модулю настроек доступ к данным */
   window.cardsData = cardsData;
 
   var currentIndex = 0;
@@ -196,7 +196,6 @@
     for (var i = 0; i < arguments.length; i++) container.appendChild(arguments[i]);
   }
 
-  // Заголовок в шапке разворота — аккуратно «Title Case»
   function titleCase(str){
     return String(str)
       .toLowerCase()
@@ -262,7 +261,7 @@
     var item = cardsData[currentIndex];
     if (item.type === 'single') renderSingle(item);
     else renderMultiFront(item);
-    progressEl.textContent = (currentIndex + 1) + ' / ' + cardsData.length;  // только X / Y
+    progressEl.textContent = (currentIndex + 1) + ' / ' + cardsData.length;
   }
 
   /* ——— навигация с анти-даблкликом ——— */
@@ -298,7 +297,7 @@
     init();
   }
 
-  /* --- Settings module (добавлено) --- */
+  /* --- Settings module --- */
   (function(){
     var btnOpen   = document.getElementById('open-settings');
     var overlay   = document.getElementById('settings-overlay');
