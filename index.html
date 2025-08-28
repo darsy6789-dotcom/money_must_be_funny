@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Флеш-карточки — Стихии</title>
+  <title>КАРТОЧНАЯ ИГРА “MONEY MUST BE FUNNY”</title>
   <style>
     body{
       margin:0; min-height:100vh; display:flex; flex-direction:column; align-items:center;
@@ -12,7 +12,26 @@
         linear-gradient(rgba(255,255,255,.40), rgba(255,255,255,.40)),
         url("./money-fire.png") center/cover no-repeat fixed;
     }
-    h1{ margin-bottom:10px; }
+
+    /* Заголовок игры: белый, жирный, с чёрной обводкой */
+    .game-title{
+      margin:0 0 10px 0;
+      font-size:44px;
+      font-weight:800;
+      color:#fff;
+      text-align:center;
+      /* “обводка” через тени вокруг текста */
+      text-shadow:
+        -1px -1px 0 #000,
+         1px -1px 0 #000,
+        -1px  1px 0 #000,
+         1px  1px 0 #000,
+         0   -2px 0 #000,
+         0    2px 0 #000,
+        -2px  0   0 #000,
+         2px  0   0 #000;
+    }
+
     .rules{ font-size:16px; max-width:720px; text-align:center; margin-bottom:8px; color:#333; }
 
     /* Счётчик над карточкой — в чёрной «пилюле» */
@@ -43,7 +62,6 @@
       border-radius:12px; border:1px solid #ccc; text-align:center;
       background:rgba(255,255,255,.88);
     }
-    /* Фронт — всегда КАПСОМ */
     .card-front{ font-weight:700; letter-spacing:.3px; text-transform:uppercase; }
     .card-back{ background:rgba(234,234,234,.88); font-style:italic; color:#444; }
 
@@ -80,6 +98,8 @@
       position:fixed; inset:0; background:rgba(0,0,0,.35);
       display:flex; justify-content:center; align-items:center; z-index:9999;
     }
+    /* когда у overlay есть атрибут hidden — он скрыт (display:none) */
+
     #settings-modal{
       width:min(560px, 92vw); max-height:86vh; overflow:auto;
       background:#fff; border-radius:12px; border:1px solid #ddd; box-shadow:0 12px 40px rgba(0,0,0,.2);
@@ -98,7 +118,7 @@
 </head>
 <body>
 
-<h1>Игра «Стихии»</h1>
+<h1 class="game-title">КАРТОЧНАЯ ИГРА “MONEY MUST BE FUNNY”</h1>
 <div class="rules">
   Нажимай на карточку, чтобы посмотреть варианты решений.<br>
   Твоя задача — монетизировать каждый элемент.
@@ -182,7 +202,7 @@
       ] }
   ];
 
-  /* ДАЁМ модулю настроек доступ к данным */
+  /* Делаем массив доступным глобально для «Настроек» */
   window.cardsData = cardsData;
 
   var currentIndex = 0;
@@ -297,7 +317,7 @@
     init();
   }
 
-  /* --- Settings module --- */
+  /* --- Settings module (усилен) --- */
   (function(){
     var btnOpen   = document.getElementById('open-settings');
     var overlay   = document.getElementById('settings-overlay');
@@ -350,9 +370,13 @@
     btnOpen.addEventListener('click', openModal);
     btnClose.addEventListener('click', closeModal);
     btnOk.addEventListener('click', closeModal);
+
+    /* клик по фону — закрыть */
     overlay.addEventListener('click', function(e){
       if (e.target === overlay) closeModal();
     });
+
+    /* Esc — закрыть */
     document.addEventListener('keydown', function(e){
       if (!overlay.hidden && e.key === 'Escape') closeModal();
     });
