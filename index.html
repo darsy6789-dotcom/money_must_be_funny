@@ -71,6 +71,29 @@
     .buttons{ margin-top:20px; display:flex; gap:10px; }
     button{ padding:10px 20px; font-size:16px; border:none; background:#4CAF50; color:#fff; border-radius:8px; cursor:pointer; }
     button:hover{ background:#45a049; }
+
+    /* --- Settings modal (добавлено) --- */
+    #open-settings{ padding:8px 14px; border-radius:8px; border:1px solid #ccc; background:#f6f6f6; cursor:pointer; }
+    #open-settings:hover{ background:#eee; }
+
+    #settings-overlay{
+      position:fixed; inset:0; background:rgba(0,0,0,.35);
+      display:flex; justify-content:center; align-items:center; z-index:9999;
+    }
+    #settings-modal{
+      width:min(560px, 92vw); max-height:86vh; overflow:auto;
+      background:#fff; border-radius:12px; border:1px solid #ddd; box-shadow:0 12px 40px rgba(0,0,0,.2);
+    }
+    .settings-header{ display:flex; justify-content:space-between; align-items:center; padding:12px 16px; border-bottom:1px solid #eee; }
+    .settings-header h2{ margin:0; font-size:18px; }
+    #close-settings{ border:none; background:#f3f3f3; border-radius:8px; padding:6px 10px; cursor:pointer; }
+    #close-settings:hover{ background:#e9e9e9; }
+    .settings-body{ padding:12px 16px; }
+    #settings-list{ list-style:none; margin:8px 0 0; padding:0; display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:8px 16px; }
+    #settings-list li{ display:flex; align-items:center; gap:8px; padding:6px 8px; border:1px solid #eee; border-radius:8px; background:#fafafa; }
+    .settings-footer{ padding:12px 16px; border-top:1px solid #eee; display:flex; justify-content:flex-end; }
+    #settings-ok{ padding:8px 14px; border-radius:8px; border:1px solid #ccc; background:#4CAF50; color:#fff; cursor:pointer; }
+    #settings-ok:hover{ filter:brightness(0.95); }
   </style>
 </head>
 <body>
@@ -80,13 +103,8 @@
   Нажимай на карточку, чтобы посмотреть варианты решений.<br>
   Твоя задача — монетизировать каждый элемент.
 </div>
-<h1>Игра «Стихии»</h1>
-<div class="rules">
-  Нажимай на карточку, чтобы посмотреть варианты решений.<br>
-  Твоя задача — монетизировать каждый элемент.
-</div>
 
-<!-- 🔽 вот сюда вставляешь кнопку и модальное окно -->
+<!-- КНОПКА И МОДАЛЬНОЕ ОКНО НАСТРОЕК (добавлено) -->
 <button id="open-settings" type="button" style="margin: 12px 0;">Настройки</button>
 
 <div id="settings-overlay" hidden>
@@ -104,6 +122,7 @@
     </div>
   </div>
 </div>
+<!-- /КНОПКА И МОДАЛЬНОЕ ОКНО НАСТРОЕК -->
 
 <div id="progress" aria-live="polite"></div>
 
@@ -162,6 +181,9 @@
         'Использовать для производства лака/смолы для скрипок и музыкальных инструментов.'
       ] }
   ];
+
+  /* ДАЁМ модулю настроек доступ к данным (добавлено) */
+  window.cardsData = cardsData;
 
   var currentIndex = 0;
   var started = false;
@@ -275,9 +297,69 @@
   } else {
     init();
   }
+
+  /* --- Settings module (добавлено) --- */
+  (function(){
+    var btnOpen   = document.getElementById('open-settings');
+    var overlay   = document.getElementById('settings-overlay');
+    var btnClose  = document.getElementById('close-settings');
+    var btnOk     = document.getElementById('settings-ok');
+    var listEl    = document.getElementById('settings-list');
+
+    if(!btnOpen || !overlay || !btnClose || !btnOk || !listEl) return;
+
+    function buildList(){
+      listEl.innerHTML = '';
+      var data = (window.cardsData || []);
+      var items = [];
+      for (var i=0; i<data.length && items.length<10; i++){
+        var it = data[i];
+        if (it && typeof it.front === 'string' && it.front.trim()){
+          items.push(it.front.trim());
+        }
+      }
+      if(items.length === 0){
+        var li = document.createElement('li');
+        li.textContent = 'Не найдено элементов (проверь cardsData)';
+        listEl.appendChild(li);
+        return;
+      }
+      for (var j=0; j<items.length; j++){
+        var li2 = document.createElement('li');
+        var label = document.createElement('label');
+        var cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.checked = true;
+        cb.value = items[j];
+        label.appendChild(cb);
+        label.appendChild(document.createTextNode(' ' + items[j]));
+        li2.appendChild(label);
+        listEl.appendChild(li2);
+      }
+    }
+
+    function openModal(){
+      buildList();
+      overlay.hidden = false;
+      setTimeout(function(){ btnOk.focus(); }, 0);
+    }
+    function closeModal(){
+      overlay.hidden = true;
+      btnOpen.focus();
+    }
+
+    btnOpen.addEventListener('click', openModal);
+    btnClose.addEventListener('click', closeModal);
+    btnOk.addEventListener('click', closeModal);
+    overlay.addEventListener('click', function(e){
+      if (e.target === overlay) closeModal();
+    });
+    document.addEventListener('keydown', function(e){
+      if (!overlay.hidden && e.key === 'Escape') closeModal();
+    });
+  })();
 })();
 </script>
 
 </body>
 </html>
-
