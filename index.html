@@ -80,6 +80,30 @@
   Нажимай на карточку, чтобы посмотреть варианты решений.<br>
   Твоя задача — монетизировать каждый элемент.
 </div>
+<h1>Игра «Стихии»</h1>
+<div class="rules">
+  Нажимай на карточку, чтобы посмотреть варианты решений.<br>
+  Твоя задача — монетизировать каждый элемент.
+</div>
+
+<!-- 🔽 вот сюда вставляешь кнопку и модальное окно -->
+<button id="open-settings" type="button" style="margin: 12px 0;">Настройки</button>
+
+<div id="settings-overlay" hidden>
+  <div id="settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+    <div class="settings-header">
+      <h2 id="settings-title">Настройки: список элементов</h2>
+      <button id="close-settings" type="button" aria-label="Закрыть">✕</button>
+    </div>
+    <div class="settings-body">
+      <p>Отмечены элементы, найденные в списке карточек. Показано до 10 штук.</p>
+      <ul id="settings-list"></ul>
+    </div>
+    <div class="settings-footer">
+      <button id="settings-ok" type="button">Готово</button>
+    </div>
+  </div>
+</div>
 
 <div id="progress" aria-live="polite"></div>
 
@@ -256,3 +280,4 @@
 
 </body>
 </html>
+
