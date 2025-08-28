@@ -11,26 +11,22 @@
       background:
         linear-gradient(rgba(255,255,255,.40), rgba(255,255,255,.40)),
         url("./money-fire.png") center/cover no-repeat fixed;
-    }
+    #settings-overlay[hidden]{ display:none !important; }
 
     /* Заголовок игры: белый, жирный, с чёрной обводкой */
-    .game-title{
-      margin:0 0 10px 0;
-      font-size:44px;
-      font-weight:800;
-      color:#fff;
-      text-align:center;
+    margin: 0 0 14px 0;
+  padding: 10px 16px;
+  display: inline-block;          /* чтобы рамка была по ширине текста */
+  font-size: 44px;
+  font-weight: 800;
+  color: #fff;
+  background: #111;               /* чёрная плашка */
+  border: 2px solid #000;         /* чёрная рамка, как просила */
+  border-radius: 14px;            /* скругления как у «пилюли» */
+  line-height: 1.15;
+  text-align: center;
       /* “обводка” через тени вокруг текста */
-      text-shadow:
-        -1px -1px 0 #000,
-         1px -1px 0 #000,
-        -1px  1px 0 #000,
-         1px  1px 0 #000,
-         0   -2px 0 #000,
-         0    2px 0 #000,
-        -2px  0   0 #000,
-         2px  0   0 #000;
-    }
+    
 
     .rules{ font-size:16px; max-width:720px; text-align:center; margin-bottom:8px; color:#333; }
 
@@ -386,3 +382,4 @@
 
 </body>
 </html>
+
