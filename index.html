@@ -5,39 +5,69 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>КАРТОЧНАЯ ИГРА “MONEY MUST BE FUNNY”</title>
   <style>
+    /* ===== ТЕМА (переменные) ===== */
+    :root{
+      --page-bg: linear-gradient(rgba(255,255,255,.40), rgba(255,255,255,.40)), url("./money-fire.png") center/cover no-repeat fixed;
+      --text: #333;
+      --card-bg: rgba(255,255,255,.88);
+      --card-border: #ccc;
+      --back-bg: rgba(234,234,234,.88);
+      --pill-bg:#111;
+      --headline-bg:#111; --headline-border:#000; --headline-text:#fff;
+      --button-primary:#4CAF50; --button-primary-hover:#45a049;
+      --modal-backdrop: rgba(0,0,0,.35);
+      --menu-btn-bg:#000; --menu-btn-border:#000; --menu-btn-text:#fff;
+    }
+    body.dark{
+      --page-bg: #000; /* чёрный фон */
+      --text: #eee;
+      --card-bg: rgba(10,10,10,.96);   /* чёрные карточки */
+      --card-border: #3a3a3a;
+      --back-bg: rgba(20,20,20,.96);
+      --pill-bg:#000;
+      --headline-bg:#000; --headline-border:#000; --headline-text:#fff;
+      --button-primary:#278f3a; --button-primary-hover:#1f7c31;
+      --modal-backdrop: rgba(0,0,0,.65);
+      --menu-btn-bg:#111; --menu-btn-border:#000; --menu-btn-text:#fff;
+    }
+
+    /* ===== БАЗА ===== */
     body{
       margin:0; min-height:100vh; display:flex; flex-direction:column; align-items:center;
       padding:40px; font-family:sans-serif;
-      background:
-        linear-gradient(rgba(255,255,255,.40), rgba(255,255,255,.40)),
-        url("./money-fire.png") center/cover no-repeat fixed;
+      background: var(--page-bg);
+      color: var(--text);
     }
     .game-title{
       margin:0 0 14px 0; padding:10px 16px; display:inline-block;
-      font-size:44px; font-weight:800; color:#fff;
-      background:#111; border:2px solid #000; border-radius:14px;
+      font-size:44px; font-weight:800; color:var(--headline-text);
+      background:var(--headline-bg); border:2px solid var(--headline-border); border-radius:14px;
     }
-    .rules{ font-size:16px; max-width:720px; text-align:center; margin-bottom:8px; color:#333; }
+    .rules{ font-size:16px; max-width:720px; text-align:center; margin-bottom:8px; }
+
     #progress{
       font-size:14px; font-weight:700; color:#fff;
-      background:#111; padding:6px 12px; border-radius:999px;
+      background:var(--pill-bg); padding:6px 12px; border-radius:999px;
       display:inline-block; margin:6px 0 12px;
     }
-    #card-container{ width:100%; display:flex; gap:16px; flex-wrap:wrap;
-      justify-content:center; align-items:stretch; min-height:190px; }
+
+    #card-container{ width:100%; display:flex; gap:16px; flex-wrap:wrap; justify-content:center; align-items:stretch; min-height:190px; }
+
     .card{ width:280px; height:180px; cursor:pointer; display:block; border-radius:12px; }
     .card-inner{ position:relative; width:100%; height:100%; }
     .card-front, .card-back{
       position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
       font-size:18px; padding:10px; box-sizing:border-box;
-      border-radius:12px; border:1px solid #ccc; text-align:center;
-      background:rgba(255,255,255,.88);
+      border-radius:12px; border:1px solid var(--card-border); text-align:center;
+      background:var(--card-bg);
     }
     .card-front{ font-weight:700; letter-spacing:.3px; text-transform:uppercase; }
-    .card-back{ background:rgba(234,234,234,.88); font-style:italic; color:#444; }
+    .card-back{ background:var(--back-bg); font-style:italic; }
+
     .card .card-back{ display:none; }
     .card.flipped .card-front{ display:none; }
     .card.flipped .card-back{ display:flex; }
+
     @supports ((transform-style: preserve-3d) and (backface-visibility: hidden)) {
       .card{ perspective:1000px; }
       .card-inner{ transform-style:preserve-3d; transition:transform .6s; }
@@ -45,49 +75,67 @@
       .card-front, .card-back{ backface-visibility:hidden; display:flex; }
       .card-back{ transform:rotateY(180deg); }
     }
-    .buttons{ margin-top:20px; display:flex; gap:10px; }
-    button{ padding:10px 20px; font-size:16px; border:none; background:#4CAF50; color:#fff; border-radius:8px; cursor:pointer; }
-    button:hover{ background:#45a049; }
 
-    /* ===== Настройки ===== */
+    .buttons{ margin-top:20px; display:flex; gap:10px; }
+    button{ padding:10px 20px; font-size:16px; border:none; background:var(--button-primary); color:#fff; border-radius:8px; cursor:pointer; }
+    button:hover{ background:var(--button-primary-hover); }
+
+    /* ===== НАСТРОЙКИ ===== */
     #open-settings{
-      padding:8px 14px; border-radius:8px; border:1px solid #000;
-      background:#000; color:#fff; cursor:pointer;
+      padding:8px 14px; border-radius:8px; border:1px solid var(--menu-btn-border);
+      background:var(--menu-btn-bg); color:var(--menu-btn-text); cursor:pointer;
     }
+    #open-settings:hover{ filter:brightness(.92); }
+
     #settings-overlay{
-      position:fixed; inset:0; background:rgba(0,0,0,.35);
+      position:fixed; inset:0; background:var(--modal-backdrop);
       display:flex; justify-content:center; align-items:center; z-index:9999;
     }
     #settings-overlay[hidden]{ display:none !important; }
     #settings-modal{
-      width:min(640px, 92vw); max-height:86vh; overflow:auto;
-      background:#fff; border-radius:12px; border:1px solid #ddd; box-shadow:0 12px 40px rgba(0,0,0,.2);
+      width:min(700px, 92vw); max-height:86vh; overflow:auto;
+      background:var(--card-bg); border-radius:12px; border:1px solid var(--card-border); box-shadow:0 12px 40px rgba(0,0,0,.2);
     }
-    .settings-header{ display:flex; justify-content:space-between; align-items:center; padding:12px 16px; border-bottom:1px solid #eee; }
+    .settings-header{ display:flex; justify-content:space-between; align-items:center; padding:12px 16px; border-bottom:1px solid var(--card-border); }
     .settings-header h2{ margin:0; font-size:18px; }
     #close-settings{
       border:1px solid #000; background:#000; color:#fff;
-      border-radius:8px; width:32px; height:32px;
-      display:grid; place-items:center; cursor:pointer; font-size:18px;
+      border-radius:8px; width:32px; height:32px; display:grid; place-items:center; cursor:pointer; font-size:18px;
     }
     .settings-body{ padding:12px 16px; }
-    .settings-footer{ padding:12px 16px; border-top:1px solid #eee; display:flex; justify-content:flex-end; gap:8px; }
-
-    /* меню */
-    .menu-btn{
-      padding:10px 12px; border:1px solid #000; background:#000; color:#fff;
-      border-radius:10px; cursor:pointer; text-align:center; font-weight:600;
-    }
-    .menu-btn:hover{ filter:brightness(.9); }
+    .settings-footer{ padding:12px 16px; border-top:1px solid var(--card-border); display:flex; justify-content:flex-end; gap:8px; }
     .hidden{ display:none !important; }
 
-    /* список элементов */
+    /* меню настроек */
+    .menu-grid{ display:grid; gap:10px; grid-template-columns:1fr 1fr; }
+    .menu-btn{
+      padding:12px; border:1px solid var(--menu-btn-border); background:var(--menu-btn-bg); color:var(--menu-btn-text);
+      border-radius:10px; cursor:pointer; text-align:center; font-weight:700;
+    }
+    .menu-btn:hover{ filter:brightness(.9); }
+
+    /* раздел «Список элементов» */
     #settings-list{ list-style:none; margin:8px 0 0; padding:0; display:grid; grid-template-columns:repeat(2, 1fr); gap:8px 16px; }
-    #settings-list li{ display:flex; align-items:center; gap:8px; padding:6px 8px; border:1px solid #eee; border-radius:8px; background:#fafafa; }
+    #settings-list li{ display:flex; align-items:center; gap:8px; padding:6px 8px; border:1px solid var(--card-border); border-radius:8px; background:var(--back-bg); }
+
     .btn-secondary{
       background:#f3f3f3; color:#222; border:1px solid #ccc; border-radius:8px; padding:8px 12px; cursor:pointer;
     }
-    #settings-ok{ padding:8px 14px; border-radius:8px; border:1px solid #000; background:#4CAF50; color:#fff; cursor:pointer; }
+    body.dark .btn-secondary{ background:#222; color:#eee; border-color:#444; }
+
+    #settings-ok{ padding:8px 14px; border-radius:8px; border:1px solid #000; background:var(--button-primary); color:#fff; cursor:pointer; }
+
+    /* тумблер */
+    .switch{ position:relative; width:54px; height:30px; }
+    .switch input{ display:none; }
+    .slider{
+      position:absolute; inset:0; background:#bbb; border-radius:999px; transition:.2s;
+    }
+    .slider:before{
+      content:""; position:absolute; height:24px; width:24px; left:3px; top:3px; background:white; border-radius:50%; transition:.2s;
+    }
+    input:checked + .slider{ background:#4CAF50; }
+    input:checked + .slider:before{ transform:translateX(24px); }
   </style>
 </head>
 <body>
@@ -100,6 +148,7 @@
 
 <button id="open-settings" type="button" style="margin: 12px 0;">Настройки</button>
 
+<!-- Модалка настроек -->
 <div id="settings-overlay" hidden>
   <div id="settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-title">
     <div class="settings-header">
@@ -107,12 +156,32 @@
       <button id="close-settings" type="button">×</button>
     </div>
     <div class="settings-body">
-      <div id="settings-menu">
+      <!-- Меню настроек -->
+      <div id="settings-menu" class="menu-grid">
         <button class="menu-btn" id="open-elements" type="button">Список элементов</button>
+        <button class="menu-btn" id="open-theme" type="button">Тёмная тема</button>
       </div>
+
+      <!-- Раздел «Список элементов» -->
       <div id="settings-elements" class="hidden">
-        <p>Вы можете убрать из списка ненужный вам элемент, нажав на пункт с галочкой.</p>
+        <p style="margin-top:0">Вы можете убрать из списка ненужный вам элемент, нажав на пункт с галочкой.</p>
+        <div style="display:flex; gap:8px; margin-bottom:8px;">
+          <button id="select-all" class="btn-secondary" type="button">Выбрать всё</button>
+          <button id="clear-all" class="btn-secondary" type="button">Сбросить всё</button>
+        </div>
         <ul id="settings-list"></ul>
+      </div>
+
+      <!-- Раздел «Тёмная тема» -->
+      <div id="settings-theme" class="hidden">
+        <p style="margin-top:0">Включите тёмную тему — фон и карточки станут чёрными.</p>
+        <div style="display:flex; align-items:center; gap:12px;">
+          <label class="switch" aria-label="Тёмная тема">
+            <input type="checkbox" id="theme-toggle">
+            <span class="slider"></span>
+          </label>
+          <span id="theme-label">Тёмная тема выключена</span>
+        </div>
       </div>
     </div>
     <div class="settings-footer">
@@ -121,9 +190,11 @@
     </div>
   </div>
 </div>
+<!-- /Модалка -->
 
 <div id="progress" aria-live="polite"></div>
 <div id="card-container"></div>
+
 <div class="buttons">
   <button id="prev-btn">Назад</button>
   <button id="next-btn">Вперёд</button>
@@ -131,79 +202,149 @@
 
 <script>
 (function(){
+  /* данные */
   var cardsData = [
     { type:'single', front:'Земля', back:'Ресурсы, сельское хозяйство, недвижимость' },
     { type:'single', front:'Вода', back:'Продажа питьевой воды, гидроэнергетика, туризм' },
     { type:'single', front:'Огонь', back:'Энергетика, обогрев, кулинария' },
     { type:'single', front:'Воздух', back:'Туризм, воздух в баллонах, реклама на воздушных шарах' },
-    { type:'multi', front:'Хлопок', labels:['Одежда','Домашний декор'], texts:['Футболки, постельное бельё','Шторы, пледы'] },
-    { type:'multi', front:'Шерсть', labels:['Тёплые изделия','Интерьер'], texts:['Свитера, носки','Покрывала, ковры'] },
-    { type:'multi', front:'Сталь', labels:['Малые формы','Спорт/дом'], texts:['Стеллажи, кашпо','Турники, стойки'] },
-    { type:'multi', front:'Блёстки', labels:['Косметика','Одежда'], texts:['Тени, хайлайтеры','Ткани, украшения'] },
-    { type:'multi', front:'Песок', labels:['Стекло','Стройматериалы'], texts:['Окна, бутылки','Бетон, плитка'] },
-    { type:'multi', front:'Смола', labels:['Клей','Музыкальные инструменты'], texts:['Производство клея','Лаки для скрипок'] }
+    { type:'multi',  front:'Хлопок', labels:['Одежда','Домашний декор'], texts:['Футболки, постельное бельё','Шторы, пледы'] },
+    { type:'multi',  front:'Шерсть', labels:['Тёплые изделия','Интерьер'], texts:['Свитера, носки','Покрывала, ковры'] },
+    { type:'multi',  front:'Сталь',  labels:['Малые формы','Спорт/дом'], texts:['Стеллажи, кашпо','Турники, стойки'] },
+    { type:'multi',  front:'Блёстки', labels:['Косметика','Одежда'], texts:['Тени, хайлайтеры','Ткани, украшения'] },
+    { type:'multi',  front:'Песок',   labels:['Стекло','Стройматериалы'], texts:['Окна, бутылки','Бетон, плитка'] },
+    { type:'multi',  front:'Смола',   labels:['Клей','Музыкальные инструменты'], texts:['Производство клея','Лаки для скрипок'] }
   ];
-  window.cardsData = cardsData;
 
-  var visible = new Set(cardsData.map(c=>c.front)); // по умолчанию все включены
-  var currentIndex=0, container=document.getElementById('card-container'), progressEl=document.getElementById('progress');
+  /* видимость элементов */
+  var visible = new Set(cardsData.map(c => c.front));
+
+  var currentIndex = 0;
+  var container   = document.getElementById('card-container');
+  var progressEl  = document.getElementById('progress');
+
+  function getFiltered(){ return cardsData.filter(c => visible.has(c.front)); }
 
   function render(){
-    var filtered = cardsData.filter(c=>visible.has(c.front));
-    if(filtered.length===0){ container.innerHTML='Нет элементов'; progressEl.textContent='0/0'; return; }
-    if(currentIndex>=filtered.length) currentIndex=0;
-    var item = filtered[currentIndex];
-    container.innerHTML='';
-    var div=document.createElement('div'); div.className='card';
-    var inner=document.createElement('div'); inner.className='card-inner';
-    var front=document.createElement('div'); front.className='card-front'; front.textContent=item.front.toUpperCase();
-    var back=document.createElement('div'); back.className='card-back'; back.textContent=item.back||'';
-    inner.appendChild(front); inner.appendChild(back); div.appendChild(inner);
-    div.onclick=()=>div.classList.toggle('flipped');
-    container.appendChild(div);
-    progressEl.textContent=(currentIndex+1)+'/'+filtered.length;
+    var list = getFiltered();
+    if(list.length === 0){
+      container.innerHTML = '<div class="card-static"><div class="card-title">Пусто</div><div class="card-text">Вы скрыли все элементы в настройках.</div></div>';
+      progressEl.textContent = '0 / 0';
+      return;
+    }
+    currentIndex = ((currentIndex % list.length) + list.length) % list.length;
+    var item = list[currentIndex];
+
+    container.innerHTML = '';
+    var card = document.createElement('div'); card.className = 'card';
+    var inner= document.createElement('div'); inner.className = 'card-inner';
+    var front= document.createElement('div'); front.className = 'card-front'; front.textContent = item.front.toUpperCase();
+    var back = document.createElement('div'); back.className  = 'card-back';  back.textContent  = item.back || '';
+    inner.appendChild(front); inner.appendChild(back); card.appendChild(inner);
+    card.onclick = () => card.classList.toggle('flipped');
+    container.appendChild(card);
+
+    progressEl.textContent = (currentIndex + 1) + ' / ' + list.length;
   }
 
-  document.getElementById('next-btn').onclick=()=>{currentIndex++;render();};
-  document.getElementById('prev-btn').onclick=()=>{currentIndex--; if(currentIndex<0)currentIndex=0; render();};
+  document.getElementById('next-btn').onclick = function(){
+    var len = getFiltered().length || 1;
+    currentIndex = (currentIndex + 1) % len;
+    render();
+  };
+  document.getElementById('prev-btn').onclick = function(){
+    var len = getFiltered().length || 1;
+    currentIndex = (currentIndex - 1 + len) % len;
+    render();
+  };
 
   render();
 
-  /* настройки */
-  var overlay=document.getElementById('settings-overlay'),
-      btnOpen=document.getElementById('open-settings'),
-      btnClose=document.getElementById('close-settings'),
-      btnOk=document.getElementById('settings-ok'),
-      btnBack=document.getElementById('back-to-menu'),
-      menu=document.getElementById('settings-menu'),
-      elems=document.getElementById('settings-elements'),
-      list=document.getElementById('settings-list');
+  /* === НАСТРОЙКИ === */
+  var overlay = document.getElementById('settings-overlay');
+  var btnOpen = document.getElementById('open-settings');
+  var btnClose= document.getElementById('close-settings');
+  var btnOk   = document.getElementById('settings-ok');
+  var btnBack = document.getElementById('back-to-menu');
+  var menu    = document.getElementById('settings-menu');
+  var elems   = document.getElementById('settings-elements');
+  var themeV  = document.getElementById('settings-theme');
+  var listEl  = document.getElementById('settings-list');
+  var titleEl = document.getElementById('settings-title');
+  var btnOpenElems = document.getElementById('open-elements');
+  var btnOpenTheme = document.getElementById('open-theme');
+  var btnSelectAll = document.getElementById('select-all');
+  var btnClearAll  = document.getElementById('clear-all');
+
+  /* Тёмная тема */
+  var toggle = document.getElementById('theme-toggle');
+  var themeLabel = document.getElementById('theme-label');
+
+  function applyTheme(dark){
+    document.body.classList.toggle('dark', dark);
+    toggle.checked = dark;
+    themeLabel.textContent = dark ? 'Тёмная тема включена' : 'Тёмная тема выключена';
+    try { localStorage.setItem('mmf_theme', dark ? 'dark' : 'light'); } catch(e){}
+  }
+  // загрузить сохранённый выбор
+  try { applyTheme(localStorage.getItem('mmf_theme') === 'dark'); } catch(e){}
+
+  toggle.addEventListener('change', function(){ applyTheme(toggle.checked); });
 
   function buildList(){
-    list.innerHTML='';
-    cardsData.forEach(c=>{
-      var li=document.createElement('li');
-      var label=document.createElement('label');
-      var cb=document.createElement('input'); cb.type='checkbox'; cb.checked=visible.has(c.front);
-      cb.onchange=function(){
-        if(cb.checked) visible.add(c.front); else visible.delete(c.front);
+    listEl.innerHTML = '';
+    cardsData.forEach(function(c){
+      var li = document.createElement('li');
+      var label = document.createElement('label');
+      var cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.checked = visible.has(c.front);
+      cb.onchange = function(){
+        if (cb.checked) visible.add(c.front); else visible.delete(c.front);
         render();
       };
       label.appendChild(cb);
-      label.appendChild(document.createTextNode(' '+c.front));
+      label.appendChild(document.createTextNode(' ' + c.front));
       li.appendChild(label);
-      list.appendChild(li);
+      listEl.appendChild(li);
     });
   }
 
-  function showMenu(){menu.classList.remove('hidden'); elems.classList.add('hidden'); btnBack.classList.add('hidden');}
-  function showElems(){menu.classList.add('hidden'); elems.classList.remove('hidden'); btnBack.classList.remove('hidden'); buildList();}
+  function showMenu(){
+    titleEl.textContent = 'Настройки';
+    menu.classList.remove('hidden');
+    elems.classList.add('hidden');
+    themeV.classList.add('hidden');
+    btnBack.classList.add('hidden');
+  }
+  function showElems(){
+    titleEl.textContent = 'Настройки · Список элементов';
+    menu.classList.add('hidden');
+    elems.classList.remove('hidden');
+    themeV.classList.add('hidden');
+    btnBack.classList.remove('hidden');
+    buildList();
+  }
+  function showTheme(){
+    titleEl.textContent = 'Настройки · Тёмная тема';
+    menu.classList.add('hidden');
+    elems.classList.add('hidden');
+    themeV.classList.remove('hidden');
+    btnBack.classList.remove('hidden');
+  }
 
-  btnOpen.onclick=()=>{overlay.hidden=false; showMenu();};
-  btnClose.onclick=()=>overlay.hidden=true;
-  btnOk.onclick=()=>overlay.hidden=true;
-  btnBack.onclick=showMenu;
-  document.getElementById('open-elements').onclick=showElems;
+  btnOpen.onclick  = () => { overlay.hidden = false; showMenu(); };
+  btnClose.onclick = () => { overlay.hidden = true; };
+  btnOk.onclick    = () => { overlay.hidden = true; };
+  btnBack.onclick  = showMenu;
+  btnOpenElems.onclick = showElems;
+  btnOpenTheme.onclick = showTheme;
+
+  btnSelectAll.onclick = function(){ cardsData.forEach(c => visible.add(c.front)); buildList(); render(); };
+  btnClearAll.onclick  = function(){ visible.clear(); buildList(); render(); };
+
+  overlay.addEventListener('click', function(e){ if(e.target === overlay) overlay.hidden = true; });
+  document.addEventListener('keydown', function(e){ if(!overlay.hidden && e.key === 'Escape') overlay.hidden = true; });
 })();
 </script>
 </body>
