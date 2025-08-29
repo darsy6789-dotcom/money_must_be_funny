@@ -5,32 +5,33 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>КАРТОЧНАЯ ИГРА “MONEY MUST BE FUNNY”</title>
   <style>
+    /* ====== БАЗА ====== */
     body{
       margin:0; min-height:100vh; display:flex; flex-direction:column; align-items:center;
       padding:40px; font-family:sans-serif;
       background:
         linear-gradient(rgba(255,255,255,.40), rgba(255,255,255,.40)),
         url("./money-fire.png") center/cover no-repeat fixed;
-    #settings-overlay[hidden]{ display:none !important; }
+    }
 
-    /* Заголовок игры: белый, жирный, с чёрной обводкой */
-    margin: 0 0 14px 0;
-  padding: 10px 16px;
-  display: inline-block;          /* чтобы рамка была по ширине текста */
-  font-size: 44px;
-  font-weight: 800;
-  color: #fff;
-  background: #111;               /* чёрная плашка */
-  border: 2px solid #000;         /* чёрная рамка, как просила */
-  border-radius: 14px;            /* скругления как у «пилюли» */
-  line-height: 1.15;
-  text-align: center;
-      /* “обводка” через тени вокруг текста */
-    
+    /* Заголовок-плашка как у счётчика */
+    .game-title{
+      margin: 0 0 14px 0;
+      padding: 10px 16px;
+      display: inline-block;      /* рамка по ширине текста */
+      font-size: 44px;
+      font-weight: 800;
+      color: #fff;
+      background: #111;           /* чёрная плашка */
+      border: 2px solid #000;     /* чёрная рамка */
+      border-radius: 14px;        /* скругления */
+      line-height: 1.15;
+      text-align: center;
+    }
 
     .rules{ font-size:16px; max-width:720px; text-align:center; margin-bottom:8px; color:#333; }
 
-    /* Счётчик над карточкой — в чёрной «пилюле» */
+    /* Счётчик над карточкой — чёрная «пилюля» */
     #progress{
       font-size:14px; font-weight:700; color:#fff;
       background:#111; padding:6px 12px; border-radius:999px;
@@ -86,7 +87,7 @@
     button{ padding:10px 20px; font-size:16px; border:none; background:#4CAF50; color:#fff; border-radius:8px; cursor:pointer; }
     button:hover{ background:#45a049; }
 
-    /* --- Settings modal --- */
+    /* ====== SETTINGS MODAL ====== */
     #open-settings{ padding:8px 14px; border-radius:8px; border:1px solid #ccc; background:#f6f6f6; cursor:pointer; }
     #open-settings:hover{ background:#eee; }
 
@@ -94,7 +95,8 @@
       position:fixed; inset:0; background:rgba(0,0,0,.35);
       display:flex; justify-content:center; align-items:center; z-index:9999;
     }
-    /* когда у overlay есть атрибут hidden — он скрыт (display:none) */
+    /* скрывать оверлей, когда стоит атрибут hidden */
+    #settings-overlay[hidden]{ display:none !important; }
 
     #settings-modal{
       width:min(560px, 92vw); max-height:86vh; overflow:auto;
@@ -102,13 +104,20 @@
     }
     .settings-header{ display:flex; justify-content:space-between; align-items:center; padding:12px 16px; border-bottom:1px solid #eee; }
     .settings-header h2{ margin:0; font-size:18px; }
-    #close-settings{ border:none; background:#f3f3f3; border-radius:8px; padding:6px 10px; cursor:pointer; }
-    #close-settings:hover{ background:#e9e9e9; }
+
+    /* Чёрный квадратный крестик с белым X */
+    #close-settings{
+      border:1px solid #000; background:#000; color:#fff;
+      border-radius:8px; width:32px; height:32px;
+      display:grid; place-items:center; cursor:pointer; font-size:18px; line-height:1;
+    }
+    #close-settings:hover{ filter:brightness(.9); }
+
     .settings-body{ padding:12px 16px; }
     #settings-list{ list-style:none; margin:8px 0 0; padding:0; display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:8px 16px; }
     #settings-list li{ display:flex; align-items:center; gap:8px; padding:6px 8px; border:1px solid #eee; border-radius:8px; background:#fafafa; }
     .settings-footer{ padding:12px 16px; border-top:1px solid #eee; display:flex; justify-content:flex-end; }
-    #settings-ok{ padding:8px 14px; border-radius:8px; border:1px solid #ccc; background:#4CAF50; color:#fff; cursor:pointer; }
+    #settings-ok{ padding:8px 14px; border-radius:8px; border:1px solid #000; background:#4CAF50; color:#fff; cursor:pointer; }
     #settings-ok:hover{ filter:brightness(0.95); }
   </style>
 </head>
@@ -127,7 +136,7 @@
   <div id="settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-title">
     <div class="settings-header">
       <h2 id="settings-title">Настройки: список элементов</h2>
-      <button id="close-settings" type="button" aria-label="Закрыть">✕</button>
+      <button id="close-settings" type="button" aria-label="Закрыть">×</button>
     </div>
     <div class="settings-body">
       <p>Отмечены элементы, найденные в списке карточек. Показано до 10 штук.</p>
@@ -198,8 +207,7 @@
       ] }
   ];
 
-  /* Делаем массив доступным глобально для «Настроек» */
-  window.cardsData = cardsData;
+  window.cardsData = cardsData; // чтобы «Настройки» видели список
 
   var currentIndex = 0;
   var started = false;
@@ -313,7 +321,7 @@
     init();
   }
 
-  /* --- Settings module (усилен) --- */
+  /* --- Settings module --- */
   (function(){
     var btnOpen   = document.getElementById('open-settings');
     var overlay   = document.getElementById('settings-overlay');
@@ -382,4 +390,3 @@
 
 </body>
 </html>
-
