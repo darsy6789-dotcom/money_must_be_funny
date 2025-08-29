@@ -19,10 +19,10 @@
       --menu-btn-bg:#000; --menu-btn-border:#000; --menu-btn-text:#fff;
     }
     body.dark{
-      --page-bg: #000; /* чёрный фон */
-      --text: #eee;
-      --card-bg: rgba(10,10,10,.96);   /* чёрные карточки */
-      --card-border: #3a3a3a;
+      --page-bg:#000;
+      --text:#eee;
+      --card-bg: rgba(10,10,10,.96);
+      --card-border:#3a3a3a;
       --back-bg: rgba(20,20,20,.96);
       --pill-bg:#000;
       --headline-bg:#000; --headline-border:#000; --headline-text:#fff;
@@ -35,8 +35,7 @@
     body{
       margin:0; min-height:100vh; display:flex; flex-direction:column; align-items:center;
       padding:40px; font-family:sans-serif;
-      background: var(--page-bg);
-      color: var(--text);
+      background:var(--page-bg); color:var(--text);
     }
     .game-title{
       margin:0 0 14px 0; padding:10px 16px; display:inline-block;
@@ -53,6 +52,7 @@
 
     #card-container{ width:100%; display:flex; gap:16px; flex-wrap:wrap; justify-content:center; align-items:stretch; min-height:190px; }
 
+    /* flip-карточка */
     .card{ width:280px; height:180px; cursor:pointer; display:block; border-radius:12px; }
     .card-inner{ position:relative; width:100%; height:100%; }
     .card-front, .card-back{
@@ -76,6 +76,15 @@
       .card-back{ transform:rotateY(180deg); }
     }
 
+    /* статичные карточки для «мульти» */
+    .card-static{
+      width:320px; min-height:180px; display:flex; flex-direction:column; gap:8px;
+      padding:14px; border-radius:12px; border:1px solid var(--card-border);
+      background:var(--card-bg); box-sizing:border-box;
+    }
+    .card-title{ font-weight:600; font-size:18px; }
+    .card-text{ font-size:16px; line-height:1.35; }
+
     .buttons{ margin-top:20px; display:flex; gap:10px; }
     button{ padding:10px 20px; font-size:16px; border:none; background:var(--button-primary); color:#fff; border-radius:8px; cursor:pointer; }
     button:hover{ background:var(--button-primary-hover); }
@@ -98,15 +107,11 @@
     }
     .settings-header{ display:flex; justify-content:space-between; align-items:center; padding:12px 16px; border-bottom:1px solid var(--card-border); }
     .settings-header h2{ margin:0; font-size:18px; }
-    #close-settings{
-      border:1px solid #000; background:#000; color:#fff;
-      border-radius:8px; width:32px; height:32px; display:grid; place-items:center; cursor:pointer; font-size:18px;
-    }
+    #close-settings{ border:1px solid #000; background:#000; color:#fff; border-radius:8px; width:32px; height:32px; display:grid; place-items:center; cursor:pointer; font-size:18px; }
     .settings-body{ padding:12px 16px; }
     .settings-footer{ padding:12px 16px; border-top:1px solid var(--card-border); display:flex; justify-content:flex-end; gap:8px; }
     .hidden{ display:none !important; }
 
-    /* меню настроек */
     .menu-grid{ display:grid; gap:10px; grid-template-columns:1fr 1fr; }
     .menu-btn{
       padding:12px; border:1px solid var(--menu-btn-border); background:var(--menu-btn-bg); color:var(--menu-btn-text);
@@ -114,7 +119,6 @@
     }
     .menu-btn:hover{ filter:brightness(.9); }
 
-    /* раздел «Список элементов» */
     #settings-list{ list-style:none; margin:8px 0 0; padding:0; display:grid; grid-template-columns:repeat(2, 1fr); gap:8px 16px; }
     #settings-list li{ display:flex; align-items:center; gap:8px; padding:6px 8px; border:1px solid var(--card-border); border-radius:8px; background:var(--back-bg); }
 
@@ -125,15 +129,10 @@
 
     #settings-ok{ padding:8px 14px; border-radius:8px; border:1px solid #000; background:var(--button-primary); color:#fff; cursor:pointer; }
 
-    /* тумблер */
     .switch{ position:relative; width:54px; height:30px; }
     .switch input{ display:none; }
-    .slider{
-      position:absolute; inset:0; background:#bbb; border-radius:999px; transition:.2s;
-    }
-    .slider:before{
-      content:""; position:absolute; height:24px; width:24px; left:3px; top:3px; background:white; border-radius:50%; transition:.2s;
-    }
+    .slider{ position:absolute; inset:0; background:#bbb; border-radius:999px; transition:.2s; }
+    .slider:before{ content:""; position:absolute; height:24px; width:24px; left:3px; top:3px; background:white; border-radius:50%; transition:.2s; }
     input:checked + .slider{ background:#4CAF50; }
     input:checked + .slider:before{ transform:translateX(24px); }
   </style>
@@ -156,13 +155,11 @@
       <button id="close-settings" type="button">×</button>
     </div>
     <div class="settings-body">
-      <!-- Меню настроек -->
       <div id="settings-menu" class="menu-grid">
         <button class="menu-btn" id="open-elements" type="button">Список элементов</button>
         <button class="menu-btn" id="open-theme" type="button">Тёмная тема</button>
       </div>
 
-      <!-- Раздел «Список элементов» -->
       <div id="settings-elements" class="hidden">
         <p style="margin-top:0">Вы можете убрать из списка ненужный вам элемент, нажав на пункт с галочкой.</p>
         <div style="display:flex; gap:8px; margin-bottom:8px;">
@@ -172,7 +169,6 @@
         <ul id="settings-list"></ul>
       </div>
 
-      <!-- Раздел «Тёмная тема» -->
       <div id="settings-theme" class="hidden">
         <p style="margin-top:0">Включите тёмную тему — фон и карточки станут чёрными.</p>
         <div style="display:flex; align-items:center; gap:12px;">
@@ -204,19 +200,41 @@
 (function(){
   /* данные */
   var cardsData = [
-    { type:'single', front:'Земля', back:'Ресурсы, сельское хозяйство, недвижимость' },
-    { type:'single', front:'Вода', back:'Продажа питьевой воды, гидроэнергетика, туризм' },
-    { type:'single', front:'Огонь', back:'Энергетика, обогрев, кулинария' },
+    { type:'single', front:'Земля',  back:'Ресурсы, сельское хозяйство, недвижимость' },
+    { type:'single', front:'Вода',   back:'Продажа питьевой воды, гидроэнергетика, туризм' },
     { type:'single', front:'Воздух', back:'Туризм, воздух в баллонах, реклама на воздушных шарах' },
-    { type:'multi',  front:'Хлопок', labels:['Одежда','Домашний декор'], texts:['Футболки, постельное бельё','Шторы, пледы'] },
-    { type:'multi',  front:'Шерсть', labels:['Тёплые изделия','Интерьер'], texts:['Свитера, носки','Покрывала, ковры'] },
-    { type:'multi',  front:'Сталь',  labels:['Малые формы','Спорт/дом'], texts:['Стеллажи, кашпо','Турники, стойки'] },
-    { type:'multi',  front:'Блёстки', labels:['Косметика','Одежда'], texts:['Тени, хайлайтеры','Ткани, украшения'] },
-    { type:'multi',  front:'Песок',   labels:['Стекло','Стройматериалы'], texts:['Окна, бутылки','Бетон, плитка'] },
-    { type:'multi',  front:'Смола',   labels:['Клей','Музыкальные инструменты'], texts:['Производство клея','Лаки для скрипок'] }
+    { type:'single', front:'Огонь',  back:'Энергетика, обогрев, кулинария' },
+
+    { type:'multi',  front:'Блёстки',
+      labels:['Косметика','Одежда и аксессуары'],
+      texts: ['Косметика: тени, хайлайтеры, лаки для ногтей.','Одежда и аксессуары: ткани с блёстками, сумки, украшения.'] },
+
+    { type:'multi',  front:'Песок',
+      labels:['Стекло','Строительные материалы'],
+      texts: ['Плавишь песок → стекло (окна, бутылки, зеркала, экраны).',
+              'Стройматериалы: бетон, цемент, кирпич, плитка, асфальт.'] },
+
+    { type:'multi',  front:'Смола',
+      labels:['Клей','Музыкальные инструменты'],
+      texts: ['Производство клея.','Лаки/смолы для скрипок и инструментов.'] },
+
+    { type:'multi',  front:'Сталь',
+      labels:['Малые архитектурные формы','Спорт/дом'],
+      texts: ['Стеллажи, каркасы столов, уличные кашпо.','Турники, стойки для штанги, кронштейны, крепёж.'] },
+
+    { type:'multi',  front:'Хлопок',
+      labels:['Одежда и базовые изделия','Домашний декор'],
+      texts: ['Футболки, постельное бельё, полотенца, пижамы.','Шторы, скатерти, пледы, чехлы на мебель.'] },
+
+    { type:'multi',  front:'Шерсть',
+      labels:['Тёплые изделия','Интерьер'],
+      texts: ['Свитера, носки, варежки, шарфы, пледы.','Покрывала, ковры, подушки, панно из войлока.'] }
   ];
 
-  /* видимость элементов */
+  /* сортировка по алфавиту (русская локаль) */
+  cardsData.sort(function(a,b){ return a.front.localeCompare(b.front, 'ru'); });
+
+  /* видимость элементов (по умолчанию все) */
   var visible = new Set(cardsData.map(c => c.front));
 
   var currentIndex = 0;
@@ -224,6 +242,47 @@
   var progressEl  = document.getElementById('progress');
 
   function getFiltered(){ return cardsData.filter(c => visible.has(c.front)); }
+
+  /* фабрики */
+  function createFlipCard(frontText, backText){
+    var wrapper = document.createElement('div'); wrapper.className = 'card';
+    var inner   = document.createElement('div'); inner.className   = 'card-inner';
+    var front   = document.createElement('div'); front.className   = 'card-front'; front.textContent = frontText.toUpperCase();
+    var back    = document.createElement('div'); back.className    = 'card-back';  back.textContent  = backText || '';
+    inner.appendChild(front); inner.appendChild(back); wrapper.appendChild(inner);
+    wrapper.onclick = function(){ wrapper.classList.toggle('flipped'); };
+    return wrapper;
+  }
+  function createInfoCard(title, text){
+    var box = document.createElement('div'); box.className = 'card-static';
+    var t = document.createElement('div'); t.className = 'card-title'; t.textContent = title;
+    var d = document.createElement('div'); d.className = 'card-text';  d.textContent = text;
+    box.appendChild(t); box.appendChild(d); return box;
+  }
+  function createMultiFrontCard(title, onOpen){
+    var wrapper = document.createElement('div'); wrapper.className = 'card';
+    var inner   = document.createElement('div'); inner.className   = 'card-inner';
+    var front   = document.createElement('div'); front.className   = 'card-front'; front.textContent = title.toUpperCase();
+    var back    = document.createElement('div'); back.className    = 'card-back';  back.textContent  = ''; /* без подсказки */
+    inner.appendChild(front); inner.appendChild(back); wrapper.appendChild(inner);
+    wrapper.onclick = function(){ if (onOpen) onOpen(); };
+    return wrapper;
+  }
+
+  /* рендеры */
+  function renderSingle(item){
+    container.innerHTML = '';
+    container.appendChild(createFlipCard(item.front, item.back));
+  }
+  function renderMultiFront(item){
+    container.innerHTML = '';
+    container.appendChild(createMultiFrontCard(item.front, function(){ renderMultiSplit(item); }));
+  }
+  function renderMultiSplit(item){
+    container.innerHTML = '';
+    container.appendChild(createInfoCard(item.labels[0], item.texts[0]));
+    container.appendChild(createInfoCard(item.labels[1], item.texts[1]));
+  }
 
   function render(){
     var list = getFiltered();
@@ -234,16 +293,8 @@
     }
     currentIndex = ((currentIndex % list.length) + list.length) % list.length;
     var item = list[currentIndex];
-
-    container.innerHTML = '';
-    var card = document.createElement('div'); card.className = 'card';
-    var inner= document.createElement('div'); inner.className = 'card-inner';
-    var front= document.createElement('div'); front.className = 'card-front'; front.textContent = item.front.toUpperCase();
-    var back = document.createElement('div'); back.className  = 'card-back';  back.textContent  = item.back || '';
-    inner.appendChild(front); inner.appendChild(back); card.appendChild(inner);
-    card.onclick = () => card.classList.toggle('flipped');
-    container.appendChild(card);
-
+    if (item.type === 'single') renderSingle(item);
+    else renderMultiFront(item);
     progressEl.textContent = (currentIndex + 1) + ' / ' + list.length;
   }
 
@@ -279,21 +330,21 @@
   /* Тёмная тема */
   var toggle = document.getElementById('theme-toggle');
   var themeLabel = document.getElementById('theme-label');
-
   function applyTheme(dark){
     document.body.classList.toggle('dark', dark);
     toggle.checked = dark;
     themeLabel.textContent = dark ? 'Тёмная тема включена' : 'Тёмная тема выключена';
     try { localStorage.setItem('mmf_theme', dark ? 'dark' : 'light'); } catch(e){}
   }
-  // загрузить сохранённый выбор
   try { applyTheme(localStorage.getItem('mmf_theme') === 'dark'); } catch(e){}
-
   toggle.addEventListener('change', function(){ applyTheme(toggle.checked); });
 
+  /* список элементов */
   function buildList(){
     listEl.innerHTML = '';
-    cardsData.forEach(function(c){
+    /* показываем в алфавитном порядке */
+    var data = cardsData.slice().filter(c=>true).sort(function(a,b){ return a.front.localeCompare(b.front,'ru'); });
+    data.forEach(function(c){
       var li = document.createElement('li');
       var label = document.createElement('label');
       var cb = document.createElement('input');
