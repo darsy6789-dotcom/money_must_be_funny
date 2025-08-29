@@ -18,20 +18,20 @@
     .game-title{
       margin: 0 0 14px 0;
       padding: 10px 16px;
-      display: inline-block;      /* рамка по ширине текста */
+      display: inline-block;
       font-size: 44px;
       font-weight: 800;
       color: #fff;
-      background: #111;           /* чёрная плашка */
-      border: 2px solid #000;     /* чёрная рамка */
-      border-radius: 14px;        /* скругления */
+      background: #111;
+      border: 2px solid #000;
+      border-radius: 14px;
       line-height: 1.15;
       text-align: center;
     }
 
     .rules{ font-size:16px; max-width:720px; text-align:center; margin-bottom:8px; color:#333; }
 
-    /* Счётчик над карточкой — чёрная «пилюля» */
+    /* Счётчик */
     #progress{
       font-size:14px; font-weight:700; color:#fff;
       background:#111; padding:6px 12px; border-radius:999px;
@@ -67,7 +67,7 @@
     .card.flipped .card-front{ display:none; }
     .card.flipped .card-back{ display:flex; }
 
-    /* Красивый флип при наличии 3D */
+    /* 3D флип */
     @supports ((transform-style: preserve-3d) and (backface-visibility: hidden)) {
       .card{ perspective:1000px; }
       .card-inner{ transform-style:preserve-3d; transition:transform .6s; }
@@ -88,24 +88,27 @@
     button:hover{ background:#45a049; }
 
     /* ====== SETTINGS MODAL ====== */
-    #open-settings{ padding:8px 14px; border-radius:8px; border:1px solid #ccc; background:#f6f6f6; cursor:pointer; }
-    #open-settings:hover{ background:#eee; }
+    /* чёрная кнопка настроек */
+    #open-settings{
+      padding:8px 14px; border-radius:8px; border:1px solid #000;
+      background:#000; color:#fff; cursor:pointer;
+    }
+    #open-settings:hover{ filter:brightness(.92); }
 
     #settings-overlay{
       position:fixed; inset:0; background:rgba(0,0,0,.35);
       display:flex; justify-content:center; align-items:center; z-index:9999;
     }
-    /* скрывать оверлей, когда стоит атрибут hidden */
     #settings-overlay[hidden]{ display:none !important; }
 
     #settings-modal{
-      width:min(560px, 92vw); max-height:86vh; overflow:auto;
+      width:min(640px, 92vw); max-height:86vh; overflow:auto;
       background:#fff; border-radius:12px; border:1px solid #ddd; box-shadow:0 12px 40px rgba(0,0,0,.2);
     }
     .settings-header{ display:flex; justify-content:space-between; align-items:center; padding:12px 16px; border-bottom:1px solid #eee; }
     .settings-header h2{ margin:0; font-size:18px; }
 
-    /* Чёрный квадратный крестик с белым X */
+    /* чёрный крестик */
     #close-settings{
       border:1px solid #000; background:#000; color:#fff;
       border-radius:8px; width:32px; height:32px;
@@ -114,11 +117,26 @@
     #close-settings:hover{ filter:brightness(.9); }
 
     .settings-body{ padding:12px 16px; }
-    #settings-list{ list-style:none; margin:8px 0 0; padding:0; display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:8px 16px; }
+    .settings-footer{ padding:12px 16px; border-top:1px solid #eee; display:flex; justify-content:flex-end; gap:8px; }
+
+    /* список элементов (чекбоксы) */
+    #settings-list{ list-style:none; margin:8px 0 0; padding:0; display:grid; grid-template-columns:repeat(2, 1fr); gap:8px 16px; }
     #settings-list li{ display:flex; align-items:center; gap:8px; padding:6px 8px; border:1px solid #eee; border-radius:8px; background:#fafafa; }
-    .settings-footer{ padding:12px 16px; border-top:1px solid #eee; display:flex; justify-content:flex-end; }
+
+    /* меню настроек */
+    .settings-menu{ display:grid; gap:8px; }
+    .menu-btn{
+      padding:10px 12px; border:1px solid #ddd; background:#f7f7f7; border-radius:10px; cursor:pointer; text-align:left;
+    }
+    .menu-btn:hover{ background:#efefef; }
+
+    .hidden{ display:none !important; }
+    .btn-secondary{
+      background:#f3f3f3; color:#222; border:1px solid #ccc; border-radius:8px; padding:8px 12px; cursor:pointer;
+    }
+    .btn-secondary:hover{ background:#e9e9e9; }
     #settings-ok{ padding:8px 14px; border-radius:8px; border:1px solid #000; background:#4CAF50; color:#fff; cursor:pointer; }
-    #settings-ok:hover{ filter:brightness(0.95); }
+    #settings-ok:hover{ filter:brightness(.95); }
   </style>
 </head>
 <body>
@@ -129,25 +147,38 @@
   Твоя задача — монетизировать каждый элемент.
 </div>
 
-<!-- КНОПКА И МОДАЛЬНОЕ ОКНО НАСТРОЕК -->
+<!-- КНОПКА НАСТРОЕК -->
 <button id="open-settings" type="button" style="margin: 12px 0;">Настройки</button>
 
+<!-- МОДАЛКА НАСТРОЕК -->
 <div id="settings-overlay" hidden>
   <div id="settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-title">
     <div class="settings-header">
-      <h2 id="settings-title">Настройки: список элементов</h2>
+      <h2 id="settings-title">Настройки</h2>
       <button id="close-settings" type="button" aria-label="Закрыть">×</button>
     </div>
+
     <div class="settings-body">
-      <p>Отмечены элементы, найденные в списке карточек. Показано до 10 штук.</p>
-      <ul id="settings-list"></ul>
+      <!-- Вью №1: меню настроек -->
+      <div id="settings-menu" class="settings-menu">
+        <button class="menu-btn" id="open-elements" type="button">Список элементов</button>
+        <!-- сюда позже можно добавить другие разделы: «Тема», «Управление», и т.п. -->
+      </div>
+
+      <!-- Вью №2: раздел «Список элементов» -->
+      <div id="settings-elements" class="hidden">
+        <p style="margin-top:0">Отмечены элементы, найденные в списке карточек. Показано до 10 штук.</p>
+        <ul id="settings-list"></ul>
+      </div>
     </div>
+
     <div class="settings-footer">
+      <button id="back-to-menu" class="btn-secondary hidden" type="button">← Назад</button>
       <button id="settings-ok" type="button">Готово</button>
     </div>
   </div>
 </div>
-<!-- /КНОПКА И МОДАЛЬНОЕ ОКНО НАСТРОЕК -->
+<!-- /МОДАЛКА -->
 
 <div id="progress" aria-live="polite"></div>
 
@@ -166,39 +197,33 @@
 
 <script>
 (function(){
-  /* ——— данные ——— */
+  /* ——— ДАННЫЕ ——— */
   var cardsData = [
     { type: 'single', front: 'Земля',  back: 'Ресурсы, сельское хозяйство, недвижимость' },
     { type: 'single', front: 'Вода',   back: 'Продажа питьевой воды, гидроэнергетика, туризм' },
     { type: 'single', front: 'Огонь',  back: 'Энергетика, обогрев, кулинария' },
     { type: 'single', front: 'Воздух', back: 'Туризм, воздух в баллонах, реклама на воздушных шарах' },
-
     { type: 'multi', front: 'Хлопок',
       labels: ['Одежда и базовые изделия', 'Домашний декор'],
       texts:  ['Футболки, постельное бельё, полотенца, пижамы.', 'Шторы, скатерти, пледы, чехлы на мебель.'] },
-
     { type: 'multi', front: 'Шерсть',
       labels: ['Тёплые изделия', 'Интерьер'],
       texts:  ['Свитера, носки, варежки, шарфы, пледы (меринос, альпака, смесь).', 'Шерстяные покрывала, ковры, подушки, панно из войлока.'] },
-
     { type: 'multi', front: 'Сталь',
       labels: ['Малые архитектурные формы', 'Спорт/дом'],
       texts:  ['Стеллажи, каркасы столов, уличные кашпо.', 'Турники, стойки для штанги, кронштейны, крепёжные комплекты.'] },
-
     { type: 'multi', front: 'Блёстки',
       labels: ['Косметика', 'Одежда и аксессуары'],
       texts: [
         'Косметика: тени, хайлайтеры, лаки для ногтей.',
         'Одежда и аксессуары: ткани с блёстками, сумки, украшения.'
       ] },
-
     { type: 'multi', front: 'Песок',
       labels: ['Стекло', 'Строительные материалы'],
       texts: [
         'Плавишь песок → получаешь стекло (окна, бутылки, зеркала, экраны телефонов). Заводы готовы платить за огромные партии очищенного кварцевого песка.',
         'Строительные материалы. Песок добавляют в бетон и цемент. Кирпичи, плитка, асфальт — почти всё это делается с песком.'
       ] },
-
     { type: 'multi', front: 'Смола',
       labels: ['Клей', 'Музыкальные инструменты'],
       texts: [
@@ -206,30 +231,23 @@
         'Использовать для производства лака/смолы для скрипок и музыкальных инструментов.'
       ] }
   ];
-
-  window.cardsData = cardsData; // чтобы «Настройки» видели список
+  window.cardsData = cardsData;
 
   var currentIndex = 0;
-  var started = false;
   var navLock = false;
   var container, splitHeader, progressEl;
 
-  /* ——— утилиты ——— */
   function clearAndAppend() {
     container.innerHTML = '';
     for (var i = 0; i < arguments.length; i++) container.appendChild(arguments[i]);
   }
 
   function titleCase(str){
-    return String(str)
-      .toLowerCase()
-      .split(/(\s+|-)/)
-      .map(function(part){ return /^[\s-]+$/.test(part) ? part
-        : part.charAt(0).toUpperCase() + part.slice(1); })
-      .join('');
+    return String(str).toLowerCase().split(/(\s+|-)/).map(function(part){
+      return /^[\s-]+$/.test(part) ? part : part.charAt(0).toUpperCase() + part.slice(1);
+    }).join('');
   }
 
-  /* ——— фабрики ——— */
   function createFlipCard(frontText, backText){
     var wrapper = document.createElement('div'); wrapper.className = 'card'; wrapper.tabIndex = 0;
     var inner = document.createElement('div');   inner.className = 'card-inner';
@@ -261,7 +279,6 @@
     box.appendChild(t); box.appendChild(d); return box;
   }
 
-  /* ——— рендер ——— */
   function renderSingle(item){
     splitHeader.style.display = 'none';
     clearAndAppend(createFlipCard(item.front, item.back));
@@ -288,7 +305,6 @@
     progressEl.textContent = (currentIndex + 1) + ' / ' + cardsData.length;
   }
 
-  /* ——— навигация с анти-даблкликом ——— */
   function go(delta){
     if (navLock) return;
     navLock = true;
@@ -307,7 +323,6 @@
   }
 
   function init(){
-    if (started) return; started = true;
     container  = document.getElementById('card-container');
     splitHeader= document.getElementById('split-header');
     progressEl = document.getElementById('progress');
@@ -321,17 +336,22 @@
     init();
   }
 
-  /* --- Settings module --- */
+  /* --- SETTINGS: меню/разделы --- */
   (function(){
     var btnOpen   = document.getElementById('open-settings');
     var overlay   = document.getElementById('settings-overlay');
     var btnClose  = document.getElementById('close-settings');
     var btnOk     = document.getElementById('settings-ok');
     var listEl    = document.getElementById('settings-list');
+    var menuView  = document.getElementById('settings-menu');
+    var elemView  = document.getElementById('settings-elements');
+    var btnBack   = document.getElementById('back-to-menu');
+    var btnOpenElements = document.getElementById('open-elements');
+    var titleEl   = document.getElementById('settings-title');
 
-    if(!btnOpen || !overlay || !btnClose || !btnOk || !listEl) return;
+    if(!btnOpen || !overlay) return;
 
-    function buildList(){
+    function buildElementsList(){
       listEl.innerHTML = '';
       var data = (window.cardsData || []);
       var items = [];
@@ -361,8 +381,22 @@
       }
     }
 
+    function showMenu(){
+      titleEl.textContent = 'Настройки';
+      menuView.classList.remove('hidden');
+      elemView.classList.add('hidden');
+      btnBack.classList.add('hidden');
+    }
+    function showElements(){
+      titleEl.textContent = 'Настройки · Список элементов';
+      buildElementsList();
+      menuView.classList.add('hidden');
+      elemView.classList.remove('hidden');
+      btnBack.classList.remove('hidden');
+    }
+
     function openModal(){
-      buildList();
+      showMenu();
       overlay.hidden = false;
       setTimeout(function(){ btnOk.focus(); }, 0);
     }
@@ -374,13 +408,12 @@
     btnOpen.addEventListener('click', openModal);
     btnClose.addEventListener('click', closeModal);
     btnOk.addEventListener('click', closeModal);
+    btnBack.addEventListener('click', showMenu);
+    btnOpenElements.addEventListener('click', showElements);
 
-    /* клик по фону — закрыть */
     overlay.addEventListener('click', function(e){
       if (e.target === overlay) closeModal();
     });
-
-    /* Esc — закрыть */
     document.addEventListener('keydown', function(e){
       if (!overlay.hidden && e.key === 'Escape') closeModal();
     });
