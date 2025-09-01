@@ -153,6 +153,14 @@
     body.dark .btn-secondary{ background:#222; color:#eee; border-color:#444; }
 
     #settings-ok{ padding:8px 14px; border-radius:8px; border:1px solid #000; background:var(--button-primary); color:#fff; cursor:pointer; }
+
+    /* тумблер тёмной темы (стили пропали в твоём варианте — вернул) */
+    .switch{ position:relative; width:54px; height:30px; }
+    .switch input{ display:none; }
+    .slider{ position:absolute; inset:0; background:#bbb; border-radius:999px; transition:.2s; }
+    .slider:before{ content:""; position:absolute; height:24px; width:24px; left:3px; top:3px; background:white; border-radius:50%; transition:.2s; }
+    input:checked + .slider{ background:#4CAF50; }
+    input:checked + .slider:before{ transform:translateX(24px); }
   </style>
 </head>
 <body>
@@ -344,7 +352,7 @@
     progressEl.textContent = (currentIndex + 1) + ' / ' + list.length;
   }
 
-  /* «Вперёд» (единый стиль) */
+  /* «Вперёд» */
   document.getElementById('next-btn').onclick = function(){
     var len = getFiltered().length || 1;
     currentIndex = (currentIndex + 1) % len;
@@ -360,9 +368,8 @@
 
     function isDark(){ return document.body.classList.contains('dark'); }
     function updatePeachUI(){ labelEl.textContent = isDark() ? 'На' : 'Назад'; }
-    window.__updatePeachUI = updatePeachUI; // чтобы вызывать при смене темы
+    window.__updatePeachUI = updatePeachUI;
 
-    // действие «назад»
     function goPrev(){
       var len = getFiltered().length || 1;
       currentIndex = (currentIndex - 1 + len) % len;
@@ -371,7 +378,6 @@
 
     prevBtn.onclick = function(){
       if (isDark()){
-        // эффект только в тёмной теме
         think.classList.add('hidden');
         smile.classList.remove('hidden');
 
@@ -416,12 +422,12 @@
     toggle.checked = dark;
     themeLabel.textContent = dark ? 'Тёмная тема включена' : 'Тёмная тема выключена';
     try { localStorage.setItem('mmf_theme', dark ? 'dark' : 'light'); } catch(e){}
-    if (window.__updatePeachUI) window.__updatePeachUI(); // обновить подпись «Назад»/«На»
+    if (window.__updatePeachUI) window.__updatePeachUI();
   }
   try { applyTheme(localStorage.getItem('mmf_theme') === 'dark'); } catch(e){}
   toggle.addEventListener('change', function(){ applyTheme(toggle.checked); });
 
-  /* список элементов (с чекбоксами) */
+  /* список элементов */
   function buildList(){
     listEl.innerHTML = '';
     var data = cardsData.slice().sort(function(a,b){ return a.front.localeCompare(b.front,'ru'); });
@@ -476,45 +482,38 @@
   btnClearAll.onclick  = function(){ visible.clear(); buildList(); render(); };
 
   overlay.addEventListener('click', function(e){ if(e.target === overlay) overlay.hidden = true; });
-  // Горячие клавиши: ← / → и Esc
-document.addEventListener('keydown', function(e){
-  const tag = (e.target && e.target.tagName) ? e.target.tagName.toLowerCase() : '';
-  // не перехватываем, если печатают в инпутах/текстовых полях/селектах/текстовых блоках
-  if (tag === 'input' || tag === 'textarea' || tag === 'select' || e.isComposing) return;
 
-  // Esc — открыть/закрыть «Настройки»
-  if (e.key === 'Escape') {
-    // если модалка скрыта — открыть главное меню настроек
-    if (overlay.hidden) {
-      overlay.hidden = false;
-      showMenu(); // уже объявлена выше
-    } else {
-      // если модалка открыта — закрыть (поведение как раньше)
-      overlay.hidden = true;
+  /* Горячие клавиши: ← / → и Esc */
+  document.addEventListener('keydown', function(e){
+    const tag = (e.target && e.target.tagName) ? e.target.tagName.toLowerCase() : '';
+    if (tag === 'input' || tag === 'textarea' || tag === 'select' || e.isComposing) return;
+
+    if (e.key === 'Escape') {
+      if (overlay.hidden) { overlay.hidden = false; showMenu(); }
+      else { overlay.hidden = true; }
+      e.preventDefault();
+      return;
     }
-    e.preventDefault();
-    return;
-  }
 
-  // ← / → (и дублируем A/D) — навигация
-  if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
-    // тот же код, что в «Назад»
-    var len = getFiltered().length || 1;
-    currentIndex = (currentIndex - 1 + len) % len;
-    render();
-    e.preventDefault();
-    return;
-  }
-  if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
-    // тот же код, что в «Вперёд»
-    var len2 = getFiltered().length || 1;
-    currentIndex = (currentIndex + 1) % len2;
-    render();
-    e.preventDefault();
-    return;
-  }
-});
+    if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+      var len = getFiltered().length || 1;
+      currentIndex = (currentIndex - 1 + len) % len;
+      render();
+      e.preventDefault();
+      return;
+    }
+    if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+      var len2 = getFiltered().length || 1;
+      currentIndex = (currentIndex + 1) % len2;
+      render();
+      e.preventDefault();
+      return;
+    }
+  });
+
+  /* первый рендер */
+  render();
+})(); /* ←← ВАЖНО: закрываем IIFE */
 </script>
 </body>
 </html>
-
