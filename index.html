@@ -476,11 +476,45 @@
   btnClearAll.onclick  = function(){ visible.clear(); buildList(); render(); };
 
   overlay.addEventListener('click', function(e){ if(e.target === overlay) overlay.hidden = true; });
-  document.addEventListener('keydown', function(e){ if(!overlay.hidden && e.key === 'Escape') overlay.hidden = true; });
+  // Горячие клавиши: ← / → и Esc
+document.addEventListener('keydown', function(e){
+  const tag = (e.target && e.target.tagName) ? e.target.tagName.toLowerCase() : '';
+  // не перехватываем, если печатают в инпутах/текстовых полях/селектах/текстовых блоках
+  if (tag === 'input' || tag === 'textarea' || tag === 'select' || e.isComposing) return;
 
-  /* первый рендер */
-  render();
-})();
+  // Esc — открыть/закрыть «Настройки»
+  if (e.key === 'Escape') {
+    // если модалка скрыта — открыть главное меню настроек
+    if (overlay.hidden) {
+      overlay.hidden = false;
+      showMenu(); // уже объявлена выше
+    } else {
+      // если модалка открыта — закрыть (поведение как раньше)
+      overlay.hidden = true;
+    }
+    e.preventDefault();
+    return;
+  }
+
+  // ← / → (и дублируем A/D) — навигация
+  if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+    // тот же код, что в «Назад»
+    var len = getFiltered().length || 1;
+    currentIndex = (currentIndex - 1 + len) % len;
+    render();
+    e.preventDefault();
+    return;
+  }
+  if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+    // тот же код, что в «Вперёд»
+    var len2 = getFiltered().length || 1;
+    currentIndex = (currentIndex + 1) % len2;
+    render();
+    e.preventDefault();
+    return;
+  }
+});
 </script>
 </body>
 </html>
+
