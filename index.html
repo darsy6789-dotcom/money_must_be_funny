@@ -85,7 +85,8 @@
     .card-title{ font-weight:600; font-size:18px; }
     .card-text{ font-size:16px; line-height:1.35; }
 
-    /* ===== КНОПКИ НАВИГАЦИИ (общий стиль) ===== */
+    /* ===== КНОПКИ НАВИГАЦИИ (единый стиль) ===== */
+    .buttons{ margin-top:20px; display:flex; gap:10px; }
     .btn-nav{
       display:flex; align-items:center; gap:8px;
       padding:12px 18px; font-size:18px; font-weight:600;
@@ -94,10 +95,8 @@
     }
     .btn-nav:hover{ background:var(--button-primary-hover); }
 
-    /* «Назад» с персиком добавляет поверх общий стиль + особые фишки */
-    .btn-with-peach{
-      position:relative; overflow:visible;
-    }
+    /* «Назад» с персиком — добавляет поверх общий стиль плюс фишки */
+    .btn-with-peach{ position:relative; overflow:visible; }
     .btn-with-peach .label-text{ line-height:1; }
     .butt-svg{ width:28px; height:28px; }
 
@@ -201,4 +200,287 @@
     </div>
     <div class="settings-footer">
       <button id="back-to-menu" class="btn-secondary hidden" type="button">← Назад</button>
-      <button id="settings-ok" type="button">Готов
+      <button id="settings-ok" type="button">Готово</button>
+    </div>
+  </div>
+</div>
+<!-- /Модалка -->
+
+<div id="progress" aria-live="polite"></div>
+<div id="card-container"></div>
+
+<div class="buttons">
+  <!-- «Назад» — общий стиль + «персик» (только в тёмной теме) -->
+  <button id="prev-btn" type="button" class="btn-nav btn-with-peach">
+    <span id="prev-label" class="label-text">Назад</span>
+
+    <!-- Персик — задумчивый -->
+    <svg id="butt-think" class="butt-svg" viewBox="0 0 64 64" aria-hidden="true">
+      <defs><style>.o{stroke:#2b1b18;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}</style></defs>
+      <path class="o" fill="#ffc7b8" d="M32 14c-3-4-11-6-17-1-6 5-8 15-2 23 5 7 13 11 19 12 6-1 14-5 19-12 6-8 4-18-2-23-6-5-14-3-17 1z"/>
+      <path class="o" d="M32 14c-4 10-3 21 0 33" fill="none"/>
+      <path class="o" d="M28 36h8" />
+      <path class="o" d="M24 30h0" />
+      <path class="o" d="M40 30h0" />
+      <circle cx="22" cy="35" r="2" fill="#f7a7a0"/>
+      <circle cx="42" cy="35" r="2" fill="#f7a7a0"/>
+    </svg>
+
+    <!-- Персик — улыбается -->
+    <svg id="butt-smile" class="butt-svg hidden" viewBox="0 0 64 64" aria-hidden="true">
+      <defs><style>.o{stroke:#2b1b18;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}</style></defs>
+      <path class="o" fill="#ffc7b8" d="M32 14c-3-4-11-6-17-1-6 5-8 15-2 23 5 7 13 11 19 12 6-1 14-5 19-12 6-8 4-18-2-23-6-5-14-3-17 1z"/>
+      <path class="o" d="M32 14c-4 10-3 21 0 33" fill="none"/>
+      <path class="o" d="M24 30c2 1 4 1 6 0" fill="none"/>
+      <path class="o" d="M34 30c2 1 4 1 6 0" fill="none"/>
+      <path class="o" d="M26 36c3 3 9 3 12 0" fill="none"/>
+      <circle cx="22" cy="35" r="2" fill="#f7a7a0"/>
+      <circle cx="42" cy="35" r="2" fill="#f7a7a0"/>
+    </svg>
+  </button>
+
+  <!-- «Вперёд» — тот же общий стиль -->
+  <button id="next-btn" type="button" class="btn-nav">Вперёд</button>
+</div>
+
+<script>
+(function(){
+  /* данные */
+  var cardsData = [
+    { type:'single', front:'Земля',  back:'Ресурсы, сельское хозяйство, недвижимость' },
+    { type:'single', front:'Вода',   back:'Продажа питьевой воды, гидроэнергетика, туризм' },
+    { type:'single', front:'Воздух', back:'Туризм, воздух в баллонах, реклама на воздушных шарах' },
+    { type:'single', front:'Огонь',  back:'Энергетика, обогрев, кулинария' },
+
+    { type:'multi',  front:'Блёстки',
+      labels:['Косметика','Одежда и аксессуары'],
+      texts: ['Косметика: тени, хайлайтеры, лаки для ногтей.','Одежда и аксессуары: ткани с блёстками, сумки, украшения.'] },
+
+    { type:'multi',  front:'Песок',
+      labels:['Стекло','Строительные материалы'],
+      texts: ['Плавишь песок → стекло (окна, бутылки, зеркала, экраны).','Стройматериалы: бетон, цемент, кирпич, плитка, асфальт.'] },
+
+    { type:'multi',  front:'Смола',
+      labels:['Клей','Музыкальные инструменты'],
+      texts: ['Производство клея.','Лаки/смолы для скрипок и инструментов.'] },
+
+    { type:'multi',  front:'Сталь',
+      labels:['Малые архитектурные формы','Спорт/дом'],
+      texts: ['Стеллажи, каркасы столов, уличные кашпо.','Турники, стойки для штанги, кронштейны, крепёж.'] },
+
+    { type:'multi',  front:'Хлопок',
+      labels:['Одежда и базовые изделия','Домашний декор'],
+      texts: ['Футболки, постельное бельё, полотенца, пижамы.','Шторы, скатерти, пледы, чехлы на мебель.'] },
+
+    { type:'multi',  front:'Шерсть',
+      labels:['Тёплые изделия','Интерьер'],
+      texts: ['Свитера, носки, варежки, шарфы, пледы.','Покрывала, ковры, подушки, панно из войлока.'] }
+  ];
+
+  /* сортировка по алфавиту (русская локаль) */
+  cardsData.sort(function(a,b){ return a.front.localeCompare(b.front, 'ru'); });
+
+  /* видимость элементов (по умолчанию все) */
+  var visible = new Set(cardsData.map(c => c.front));
+
+  var currentIndex = 0;
+  var container   = document.getElementById('card-container');
+  var progressEl  = document.getElementById('progress');
+
+  function getFiltered(){ return cardsData.filter(c => visible.has(c.front)); }
+
+  /* фабрики */
+  function createFlipCard(frontText, backText){
+    var wrapper = document.createElement('div'); wrapper.className = 'card';
+    var inner   = document.createElement('div'); inner.className   = 'card-inner';
+    var front   = document.createElement('div'); front.className   = 'card-front'; front.textContent = frontText.toUpperCase();
+    var back    = document.createElement('div'); back.className    = 'card-back';  back.textContent  = backText || '';
+    inner.appendChild(front); inner.appendChild(back); wrapper.appendChild(inner);
+    wrapper.onclick = function(){ wrapper.classList.toggle('flipped'); };
+    return wrapper;
+  }
+  function createInfoCard(title, text){
+    var box = document.createElement('div'); box.className = 'card-static';
+    var t = document.createElement('div'); t.className = 'card-title'; t.textContent = title;
+    var d = document.createElement('div'); d.className = 'card-text';  d.textContent = text;
+    box.appendChild(t); box.appendChild(d); return box;
+  }
+  function createMultiFrontCard(title, onOpen){
+    var wrapper = document.createElement('div'); wrapper.className = 'card';
+    var inner   = document.createElement('div'); inner.className   = 'card-inner';
+    var front   = document.createElement('div'); front.className   = 'card-front'; front.textContent = title.toUpperCase();
+    var back    = document.createElement('div'); back.className    = 'card-back';  back.textContent  = '';
+    inner.appendChild(front); inner.appendChild(back); wrapper.appendChild(inner);
+    wrapper.onclick = function(){ if (onOpen) onOpen(); };
+    return wrapper;
+  }
+
+  /* рендеры */
+  function renderSingle(item){
+    container.innerHTML = '';
+    container.appendChild(createFlipCard(item.front, item.back));
+  }
+  function renderMultiFront(item){
+    container.innerHTML = '';
+    container.appendChild(createMultiFrontCard(item.front, function(){ renderMultiSplit(item); }));
+  }
+  function renderMultiSplit(item){
+    container.innerHTML = '';
+    container.appendChild(createInfoCard(item.labels[0], item.texts[0]));
+    container.appendChild(createInfoCard(item.labels[1], item.texts[1]));
+  }
+
+  function render(){
+    var list = getFiltered();
+    if(list.length === 0){
+      container.innerHTML = '<div class="card-static"><div class="card-title">Пусто</div><div class="card-text">Вы скрыли все элементы в настройках.</div></div>';
+      progressEl.textContent = '0 / 0';
+      return;
+    }
+    currentIndex = ((currentIndex % list.length) + list.length) % list.length;
+    var item = list[currentIndex];
+    if (item.type === 'single') renderSingle(item);
+    else renderMultiFront(item);
+    progressEl.textContent = (currentIndex + 1) + ' / ' + list.length;
+  }
+
+  /* «Вперёд» (единый стиль) */
+  document.getElementById('next-btn').onclick = function(){
+    var len = getFiltered().length || 1;
+    currentIndex = (currentIndex + 1) % len;
+    render();
+  };
+
+  /* ===== «Назад» с «персиком» только в тёмной теме ===== */
+  (function(){
+    var prevBtn = document.getElementById('prev-btn');
+    var think   = document.getElementById('butt-think');
+    var smile   = document.getElementById('butt-smile');
+    var labelEl = document.getElementById('prev-label');
+
+    function isDark(){ return document.body.classList.contains('dark'); }
+    function updatePeachUI(){ labelEl.textContent = isDark() ? 'На' : 'Назад'; }
+    window.__updatePeachUI = updatePeachUI; // чтобы вызывать при смене темы
+
+    // действие «назад»
+    function goPrev(){
+      var len = getFiltered().length || 1;
+      currentIndex = (currentIndex - 1 + len) % len;
+      render();
+    }
+
+    prevBtn.onclick = function(){
+      if (isDark()){
+        // эффект только в тёмной теме
+        think.classList.add('hidden');
+        smile.classList.remove('hidden');
+
+        var puff = document.createElement('span');
+        puff.className = 'fart-puff';
+        puff.textContent = '💨';
+        prevBtn.appendChild(puff);
+        setTimeout(function(){ puff.remove(); }, 720);
+
+        setTimeout(function(){
+          smile.classList.add('hidden');
+          think.classList.remove('hidden');
+        }, 900);
+      }
+      goPrev();
+    };
+
+    updatePeachUI();
+  })();
+
+  /* === НАСТРОЙКИ === */
+  var overlay = document.getElementById('settings-overlay');
+  var btnOpen = document.getElementById('open-settings');
+  var btnClose= document.getElementById('close-settings');
+  var btnOk   = document.getElementById('settings-ok');
+  var btnBack = document.getElementById('back-to-menu');
+  var menu    = document.getElementById('settings-menu');
+  var elems   = document.getElementById('settings-elements');
+  var themeV  = document.getElementById('settings-theme');
+  var listEl  = document.getElementById('settings-list');
+  var titleEl = document.getElementById('settings-title');
+  var btnOpenElems = document.getElementById('open-elements');
+  var btnOpenTheme = document.getElementById('open-theme');
+  var btnSelectAll = document.getElementById('select-all');
+  var btnClearAll  = document.getElementById('clear-all');
+
+  /* Тёмная тема */
+  var toggle = document.getElementById('theme-toggle');
+  var themeLabel = document.getElementById('theme-label');
+  function applyTheme(dark){
+    document.body.classList.toggle('dark', dark);
+    toggle.checked = dark;
+    themeLabel.textContent = dark ? 'Тёмная тема включена' : 'Тёмная тема выключена';
+    try { localStorage.setItem('mmf_theme', dark ? 'dark' : 'light'); } catch(e){}
+    if (window.__updatePeachUI) window.__updatePeachUI(); // обновить подпись «Назад»/«На»
+  }
+  try { applyTheme(localStorage.getItem('mmf_theme') === 'dark'); } catch(e){}
+  toggle.addEventListener('change', function(){ applyTheme(toggle.checked); });
+
+  /* список элементов (с чекбоксами) */
+  function buildList(){
+    listEl.innerHTML = '';
+    var data = cardsData.slice().sort(function(a,b){ return a.front.localeCompare(b.front,'ru'); });
+    data.forEach(function(c){
+      var li = document.createElement('li');
+      var label = document.createElement('label');
+      var cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.checked = visible.has(c.front);
+      cb.onchange = function(){
+        if (cb.checked) visible.add(c.front); else visible.delete(c.front);
+        render();
+      };
+      label.appendChild(cb);
+      label.appendChild(document.createTextNode(' ' + c.front));
+      li.appendChild(label);
+      listEl.appendChild(li);
+    });
+  }
+
+  function showMenu(){
+    titleEl.textContent = 'Настройки';
+    menu.classList.remove('hidden');
+    elems.classList.add('hidden');
+    themeV.classList.add('hidden');
+    btnBack.classList.add('hidden');
+  }
+  function showElems(){
+    titleEl.textContent = 'Настройки · Список элементов';
+    menu.classList.add('hidden');
+    elems.classList.remove('hidden');
+    themeV.classList.add('hidden');
+    btnBack.classList.remove('hidden');
+    buildList();
+  }
+  function showTheme(){
+    titleEl.textContent = 'Настройки · Тёмная тема';
+    menu.classList.add('hidden');
+    elems.classList.add('hidden');
+    themeV.classList.remove('hidden');
+    btnBack.classList.remove('hidden');
+  }
+
+  btnOpen.onclick  = () => { overlay.hidden = false; showMenu(); };
+  btnClose.onclick = () => { overlay.hidden = true; };
+  btnOk.onclick    = () => { overlay.hidden = true; };
+  btnBack.onclick  = showMenu;
+  btnOpenElems.onclick = showElems;
+  btnOpenTheme.onclick = showTheme;
+
+  btnSelectAll.onclick = function(){ cardsData.forEach(c => visible.add(c.front)); buildList(); render(); };
+  btnClearAll.onclick  = function(){ visible.clear(); buildList(); render(); };
+
+  overlay.addEventListener('click', function(e){ if(e.target === overlay) overlay.hidden = true; });
+  document.addEventListener('keydown', function(e){ if(!overlay.hidden && e.key === 'Escape') overlay.hidden = true; });
+
+  /* первый рендер */
+  render();
+})();
+</script>
+</body>
+</html>
