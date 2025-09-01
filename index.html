@@ -135,6 +135,27 @@
     .slider:before{ content:""; position:absolute; height:24px; width:24px; left:3px; top:3px; background:white; border-radius:50%; transition:.2s; }
     input:checked + .slider{ background:#4CAF50; }
     input:checked + .slider:before{ transform:translateX(24px); }
+
+    /* ===== КНОПКА «НА 🍑» ===== */
+    .btn-with-peach{
+      display:flex; align-items:center; gap:8px;
+      padding:12px 18px; font-size:18px; font-weight:600;
+      border:none; border-radius:10px; background:var(--button-primary); color:#fff; cursor:pointer;
+      position:relative; overflow:visible;
+    }
+    .btn-with-peach:hover{ background:var(--button-primary-hover); }
+    .btn-with-peach .label-text{ line-height:1; }
+    .butt-svg{ width:28px; height:28px; }
+    .fart-puff{
+      position:absolute; right:-8px; top:50%;
+      transform:translate(0,-50%); font-size:20px; opacity:0; pointer-events:none;
+      animation:puff 700ms ease-out forwards;
+    }
+    @keyframes puff{
+      0%  {opacity:0; transform:translate(8px,-50%) scale(.6);}
+      20% {opacity:1;}
+      100%{opacity:0; transform:translate(40px,-60%) scale(1.2);}
+    }
   </style>
 </head>
 <body>
@@ -192,7 +213,40 @@
 <div id="card-container"></div>
 
 <div class="buttons">
-  <button id="prev-btn">Назад</button>
+  <!-- ЗАМЕНЁННАЯ КНОПКА «Назад» → «На 🍑» -->
+  <button id="prev-btn" type="button" class="btn-with-peach">
+    <span class="label-text">На</span>
+
+    <!-- Персик — задумчивый -->
+    <svg id="butt-think" class="butt-svg" viewBox="0 0 64 64" aria-hidden="true">
+      <defs>
+        <style>.o{stroke:#2b1b18;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}</style>
+      </defs>
+      <path class="o" fill="#ffc7b8" d="M32 14c-3-4-11-6-17-1-6 5-8 15-2 23 5 7 13 11 19 12 6-1 14-5 19-12 6-8 4-18-2-23-6-5-14-3-17 1z"/>
+      <path class="o" d="M32 14c-4 10-3 21 0 33" fill="none"/>
+      <!-- глаза точечки + рот-палочка -->
+      <path class="o" d="M28 36h8" />
+      <path class="o" d="M24 30h0" />
+      <path class="o" d="M40 30h0" />
+      <circle cx="22" cy="35" r="2" fill="#f7a7a0"/>
+      <circle cx="42" cy="35" r="2" fill="#f7a7a0"/>
+    </svg>
+
+    <!-- Персик — улыбается (скрыт) -->
+    <svg id="butt-smile" class="butt-svg hidden" viewBox="0 0 64 64" aria-hidden="true">
+      <defs>
+        <style>.o{stroke:#2b1b18;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}</style>
+      </defs>
+      <path class="o" fill="#ffc7b8" d="M32 14c-3-4-11-6-17-1-6 5-8 15-2 23 5 7 13 11 19 12 6-1 14-5 19-12 6-8 4-18-2-23-6-5-14-3-17 1z"/>
+      <path class="o" d="M32 14c-4 10-3 21 0 33" fill="none"/>
+      <path class="o" d="M24 30c2 1 4 1 6 0" fill="none"/>
+      <path class="o" d="M34 30c2 1 4 1 6 0" fill="none"/>
+      <path class="o" d="M26 36c3 3 9 3 12 0" fill="none"/>
+      <circle cx="22" cy="35" r="2" fill="#f7a7a0"/>
+      <circle cx="42" cy="35" r="2" fill="#f7a7a0"/>
+    </svg>
+  </button>
+
   <button id="next-btn">Вперёд</button>
 </div>
 
@@ -342,7 +396,6 @@
   /* список элементов */
   function buildList(){
     listEl.innerHTML = '';
-    /* показываем в алфавитном порядке */
     var data = cardsData.slice().filter(c=>true).sort(function(a,b){ return a.front.localeCompare(b.front,'ru'); });
     data.forEach(function(c){
       var li = document.createElement('li');
@@ -396,6 +449,38 @@
 
   overlay.addEventListener('click', function(e){ if(e.target === overlay) overlay.hidden = true; });
   document.addEventListener('keydown', function(e){ if(!overlay.hidden && e.key === 'Escape') overlay.hidden = true; });
+
+  /* === ОБЁРТКА ДЛЯ «На 🍑»: улыбка + 💨 и затем действие «Назад» === */
+  (function(){
+    var prevBtn = document.getElementById('prev-btn');
+    var think   = document.getElementById('butt-think');
+    var smile   = document.getElementById('butt-smile');
+    if(!prevBtn || !think || !smile) return;
+
+    var oldHandler = prevBtn.onclick;      // что уже делает «Назад»
+    prevBtn.onclick = function(e){
+      // смена мордочки
+      think.classList.add('hidden');
+      smile.classList.remove('hidden');
+
+      // облачко 💨
+      var puff = document.createElement('span');
+      puff.className = 'fart-puff';
+      puff.textContent = '💨';
+      prevBtn.appendChild(puff);
+      setTimeout(function(){ puff.remove(); }, 720);
+
+      // вернуть «задумчивый» вид
+      setTimeout(function(){
+        smile.classList.add('hidden');
+        think.classList.remove('hidden');
+      }, 900);
+
+      // вызвать реальный переход «назад»
+      if (typeof oldHandler === 'function') oldHandler.call(prevBtn, e);
+    };
+  })();
+
 })();
 </script>
 </body>
