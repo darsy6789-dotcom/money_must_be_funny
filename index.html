@@ -146,6 +146,10 @@
     .btn-with-peach:hover{ background:var(--button-primary-hover); }
     .btn-with-peach .label-text{ line-height:1; }
     .butt-svg{ width:28px; height:28px; }
+
+    /* DARK-ONLY peach: в светлой теме SVG скрыты */
+    body:not(.dark) .butt-svg{ display:none; }
+
     .fart-puff{
       position:absolute; right:-8px; top:50%;
       transform:translate(0,-50%); font-size:20px; opacity:0; pointer-events:none;
@@ -213,18 +217,15 @@
 <div id="card-container"></div>
 
 <div class="buttons">
-  <!-- ЗАМЕНЁННАЯ КНОПКА «Назад» → «На 🍑» -->
+  <!-- Кнопка: в светлой теме выглядит как обычная «Назад», в тёмной — «На 🍑» -->
   <button id="prev-btn" type="button" class="btn-with-peach">
-    <span class="label-text">На</span>
+    <span id="prev-label" class="label-text">Назад</span>
 
     <!-- Персик — задумчивый -->
     <svg id="butt-think" class="butt-svg" viewBox="0 0 64 64" aria-hidden="true">
-      <defs>
-        <style>.o{stroke:#2b1b18;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}</style>
-      </defs>
+      <defs><style>.o{stroke:#2b1b18;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}</style></defs>
       <path class="o" fill="#ffc7b8" d="M32 14c-3-4-11-6-17-1-6 5-8 15-2 23 5 7 13 11 19 12 6-1 14-5 19-12 6-8 4-18-2-23-6-5-14-3-17 1z"/>
       <path class="o" d="M32 14c-4 10-3 21 0 33" fill="none"/>
-      <!-- глаза точечки + рот-палочка -->
       <path class="o" d="M28 36h8" />
       <path class="o" d="M24 30h0" />
       <path class="o" d="M40 30h0" />
@@ -232,11 +233,9 @@
       <circle cx="42" cy="35" r="2" fill="#f7a7a0"/>
     </svg>
 
-    <!-- Персик — улыбается (скрыт) -->
+    <!-- Персик — улыбается -->
     <svg id="butt-smile" class="butt-svg hidden" viewBox="0 0 64 64" aria-hidden="true">
-      <defs>
-        <style>.o{stroke:#2b1b18;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}</style>
-      </defs>
+      <defs><style>.o{stroke:#2b1b18;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}</style></defs>
       <path class="o" fill="#ffc7b8" d="M32 14c-3-4-11-6-17-1-6 5-8 15-2 23 5 7 13 11 19 12 6-1 14-5 19-12 6-8 4-18-2-23-6-5-14-3-17 1z"/>
       <path class="o" d="M32 14c-4 10-3 21 0 33" fill="none"/>
       <path class="o" d="M24 30c2 1 4 1 6 0" fill="none"/>
@@ -357,9 +356,51 @@
     currentIndex = (currentIndex + 1) % len;
     render();
   };
-  document.getElementById('prev-btn').onclick = function(){
+
+  /* ===== «На 🍑»: эффект только в тёмной теме ===== */
+  (function(){
+    var prevBtn = document.getElementById('prev-btn');
+    var think   = document.getElementById('butt-think');
+    var smile   = document.getElementById('butt-smile');
+    var labelEl = document.getElementById('prev-label');
+
+    function isDark(){ return document.body.classList.contains('dark'); }
+    function updatePeachUI(){ labelEl.textContent = isDark() ? 'На' : 'Назад'; }
+
+    // исходный обработчик «назад»
+    function goPrev(){
+      var len = getFiltered().length || 1;
+      currentIndex = (currentIndex - 1 + len) % len;
+      render();
+    }
+
+    prevBtn.onclick = function(e){
+      if (isDark()){
+        // анимация только в тёмной теме
+        think.classList.add('hidden');
+        smile.classList.remove('hidden');
+        var puff = document.createElement('span');
+        puff.className = 'fart-puff';
+        puff.textContent = '💨';
+        prevBtn.appendChild(puff);
+        setTimeout(function(){ puff.remove(); }, 720);
+        setTimeout(function(){
+          smile.classList.add('hidden');
+          think.classList.remove('hidden');
+        }, 900);
+      }
+      goPrev();
+    };
+
+    // экспортируем обновление, чтобы вызывать при смене темы
+    window.__updatePeachUI = updatePeachUI;
+    updatePeachUI();
+  })();
+
+  /* «Вперёд» */
+  document.getElementById('next-btn').onclick = function(){
     var len = getFiltered().length || 1;
-    currentIndex = (currentIndex - 1 + len) % len;
+    currentIndex = (currentIndex + 1) % len;
     render();
   };
 
@@ -389,6 +430,7 @@
     toggle.checked = dark;
     themeLabel.textContent = dark ? 'Тёмная тема включена' : 'Тёмная тема выключена';
     try { localStorage.setItem('mmf_theme', dark ? 'dark' : 'light'); } catch(e){}
+    if (window.__updatePeachUI) window.__updatePeachUI(); /* DARK-ONLY peach */
   }
   try { applyTheme(localStorage.getItem('mmf_theme') === 'dark'); } catch(e){}
   toggle.addEventListener('change', function(){ applyTheme(toggle.checked); });
@@ -449,38 +491,6 @@
 
   overlay.addEventListener('click', function(e){ if(e.target === overlay) overlay.hidden = true; });
   document.addEventListener('keydown', function(e){ if(!overlay.hidden && e.key === 'Escape') overlay.hidden = true; });
-
-  /* === ОБЁРТКА ДЛЯ «На 🍑»: улыбка + 💨 и затем действие «Назад» === */
-  (function(){
-    var prevBtn = document.getElementById('prev-btn');
-    var think   = document.getElementById('butt-think');
-    var smile   = document.getElementById('butt-smile');
-    if(!prevBtn || !think || !smile) return;
-
-    var oldHandler = prevBtn.onclick;      // что уже делает «Назад»
-    prevBtn.onclick = function(e){
-      // смена мордочки
-      think.classList.add('hidden');
-      smile.classList.remove('hidden');
-
-      // облачко 💨
-      var puff = document.createElement('span');
-      puff.className = 'fart-puff';
-      puff.textContent = '💨';
-      prevBtn.appendChild(puff);
-      setTimeout(function(){ puff.remove(); }, 720);
-
-      // вернуть «задумчивый» вид
-      setTimeout(function(){
-        smile.classList.add('hidden');
-        think.classList.remove('hidden');
-      }, 900);
-
-      // вызвать реальный переход «назад»
-      if (typeof oldHandler === 'function') oldHandler.call(prevBtn, e);
-    };
-  })();
-
 })();
 </script>
 </body>
