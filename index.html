@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>КАРТОЧНАЯ ИГРА “MONEY MUST BE FUNNY”</title>
 <style>
-  /* ===== ТЕМЫ (переменные) ===== */
   :root{
     --page-bg: linear-gradient(rgba(255,255,255,.35), rgba(255,255,255,.35)),
                url("./money-fire.png") center/cover no-repeat fixed;
@@ -19,8 +18,8 @@
     --modal-backdrop: rgba(0,0,0,.35);
 
     /* размеры текста */
-    --text-scale: 1;                 /* влияет на оборот и инфо-карточки */
-    --front-font: calc(18px * var(--text-scale)); /* размер лицевой стороны по умолчанию */
+    --text-scale: 1;
+    --front-font: calc(18px * var(--text-scale));
   }
   body.dark{
     --page-bg: linear-gradient(rgba(0,0,0,.35), rgba(0,0,0,.35)),
@@ -51,8 +50,15 @@
   #progress{
     font-size:14px; font-weight:700; color:#fff;
     background:var(--pill-bg); padding:6px 12px; border-radius:999px;
-    display:inline-block; margin:10px 0 16px;
+    display:inline-block; margin:10px 0 10px;
   }
+
+  /* локальная «назад» для разбивки */
+  #split-header{ display:none; margin-bottom:10px; }
+  #collapse-split{
+    padding:8px 12px; border-radius:8px; border:1px solid #ccc; background:#f3f3f3; cursor:pointer;
+  }
+  body.dark #collapse-split{ background:#222; color:#eee; border-color:#444; }
 
   #card-container{ width:100%; display:flex; gap:16px; flex-wrap:wrap; justify-content:center; align-items:stretch; min-height:200px; }
 
@@ -64,12 +70,10 @@
     padding:10px; border-radius:12px; border:1px solid var(--card-border);
     background:var(--card-bg); text-align:center;
   }
-  /* Лицо — отдельная переменная размера */
   .card-front{
     font-weight:800; letter-spacing:.3px; text-transform:uppercase;
     font-size: var(--front-font);
   }
-  /* Оборот и «инфо» масштабируются общей шкалой */
   .card-back{ background:var(--back-bg); font-style:italic; font-size: calc(18px * var(--text-scale)); }
 
   .card .card-back{ display:none; }
@@ -84,7 +88,7 @@
     .card-back{ transform:rotateY(180deg); }
   }
 
-  /* инфо-карточки (для multi) */
+  /* инфо-карточки */
   .card-static{
     width:360px; min-height:200px; display:flex; flex-direction:column; gap:8px;
     padding:14px; border-radius:12px; border:1px solid var(--card-border); background:var(--card-bg);
@@ -92,7 +96,15 @@
   .card-title{ font-weight:700; font-size: calc(18px * var(--text-scale)); }
   .card-text{ font-size: calc(16px * var(--text-scale)); line-height:1.35; }
 
-  /* кнопки */
+  /* спец-стиль для «Огонь» */
+  .card-fire .card-front{ 
+    background: #ffe6e6; border-color:#ff9b9b; color:#d60000;
+  }
+  .card-fire .card-back{
+    background:#ffe6e6; border-color:#ff9b9b;
+  }
+
+  /* кнопки навигации */
   .buttons{ margin-top:22px; display:flex; gap:12px; }
   .btn-nav{
     display:flex; align-items:center; gap:8px;
@@ -117,7 +129,7 @@
     100%{opacity:0; transform:translate(40px,-60%) scale(1.2);}
   }
 
-  /* ===== ТУМБЛЕР ТЕМЫ (в правом верхнем углу) ===== */
+  /* тумблер темы */
   #theme-toggle-container{ position:fixed; top:16px; right:16px; z-index:10000; }
   .theme-toggle{
     width:64px; height:34px; background:rgba(255,255,255,.85);
@@ -133,40 +145,6 @@
   }
   body.dark .theme-toggle{ background:rgba(0,0,0,.6); border-color:#444; }
   body.dark .theme-toggle .knob{ transform:translateX(30px); }
-
-  /* ===== МОДАЛКА НАСТРОЕК ===== */
-  #open-settings{ padding:8px 14px; border-radius:8px; border:1px solid #ccc; background:#f6f6f6; cursor:pointer; }
-  #open-settings:hover{ filter:brightness(.92); }
-
-  #settings-overlay{ position:fixed; inset:0; background:var(--modal-backdrop);
-    display:flex; justify-content:center; align-items:center; z-index:9999; }
-  #settings-overlay[hidden]{ display:none!important; }
-  #settings-modal{
-    width:min(760px,92vw); max-height:86vh; overflow:auto;
-    background:var(--card-bg); border-radius:12px; border:1px solid var(--card-border);
-    box-shadow:0 12px 40px rgba(0,0,0,.25);
-  }
-  .settings-header{ display:flex; justify-content:space-between; align-items:center; padding:12px 16px; border-bottom:1px solid var(--card-border); }
-  .settings-header h2{ margin:0; font-size:18px; }
-  #close-settings{ border:1px solid #000; background:#000; color:#fff; border-radius:8px; width:32px; height:32px; display:grid; place-items:center; cursor:pointer; font-size:18px; }
-  .settings-body{ padding:14px 16px; }
-  .settings-footer{ padding:12px 16px; border-top:1px solid var(--card-border); display:flex; justify-content:flex-end; gap:8px; }
-  .btn-secondary{ background:#f3f3f3; color:#222; border:1px solid #ccc; border-radius:8px; padding:8px 12px; cursor:pointer; }
-  body.dark .btn-secondary{ background:#222; color:#eee; border-color:#444; }
-  .hidden{ display:none!important; }
-
-  .menu-grid{ display:grid; gap:10px; grid-template-columns:1fr 1fr; }
-  .menu-btn{
-    padding:12px; border:1px solid #999; background:#000; color:#fff;
-    border-radius:10px; cursor:pointer; text-align:center; font-weight:700;
-  }
-  body:not(.dark) .menu-btn{ background:#000; color:#fff; border-color:#000; }
-
-  #settings-list{ list-style:none; margin:8px 0 0; padding:0; display:grid; grid-template-columns:repeat(2, 1fr); gap:8px 16px; }
-  #settings-list li{ display:flex; align-items:center; gap:8px; padding:6px 8px; border:1px solid var(--card-border); border-radius:8px; background:var(--back-bg); }
-
-  .format-grid{ display:grid; gap:10px; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); }
-  .format-item{ border:1px solid var(--card-border); border-radius:10px; padding:10px 12px; background:var(--back-bg); display:flex; gap:10px; align-items:center; }
 </style>
 </head>
 <body>
@@ -189,6 +167,12 @@
 <button id="open-settings" type="button" style="margin: 10px 0 6px;">Настройки</button>
 
 <div id="progress" aria-live="polite"></div>
+
+<!-- локальная «назад» для разбивки (multi) -->
+<div id="split-header">
+  <button id="collapse-split">← К «<span id="split-title"></span>»</button>
+</div>
+
 <div id="card-container"></div>
 
 <div class="buttons">
@@ -242,9 +226,9 @@
       <div id="settings-format" class="hidden">
         <p style="margin-top:0">Выберите размер текста:</p>
         <div class="format-grid" role="group" aria-label="Размер текста">
-          <label class="format-item"><input type="radio" name="sizeMode" value="1" checked style="accent-color:#4CAF50"> И так вижу (18px)</label>
-          <label class="format-item"><input type="radio" name="sizeMode" value="2" style="accent-color:#4CAF50"> В 2 раза больше (36px)</label>
-          <label class="format-item"><input type="radio" name="sizeMode" value="3" style="accent-color:#4CAF50"> Во весь фронт (64px, только лицевая сторона)</label>
+          <label class="format-item"><input type="radio" name="sizeMode" value="1" checked style="accent-color:#4CAF50"> И так вижу.</label>
+          <label class="format-item"><input type="radio" name="sizeMode" value="2" style="accent-color:#4CAF50"> Но можно и побольше.</label>
+          <label class="format-item"><input type="radio" name="sizeMode" value="3" style="accent-color:#4CAF50"> А ещё можно побольше?</label>
         </div>
       </div>
     </div>
@@ -289,19 +273,21 @@
       texts:['Производство клея.','Лаки/смолы для скрипок и инструментов.'] }
   ];
   cardsData.sort((a,b)=>a.front.localeCompare(b.front,'ru'));
-
-  /* видимость для «Списка элементов» */
   var visible = new Set(cardsData.map(c=>c.front));
 
   var currentIndex = 0;
   var container = document.getElementById('card-container');
   var progressEl = document.getElementById('progress');
+  var splitHeader = document.getElementById('split-header');
+  var splitTitle  = document.getElementById('split-title');
+  var collapseBtn = document.getElementById('collapse-split');
 
   function getFiltered(){ return cardsData.filter(c=>visible.has(c.front)); }
+  function getCurrent(){ return getFiltered()[currentIndex]; }
 
   /* фабрики */
-  function flipCard(frontText, backText){
-    var w = document.createElement('div'); w.className='card'; w.tabIndex=0;
+  function flipCard(frontText, backText, extraClass){
+    var w = document.createElement('div'); w.className='card '+(extraClass||''); w.tabIndex=0;
     var i = document.createElement('div'); i.className='card-inner';
     var f = document.createElement('div'); f.className='card-front'; f.textContent = frontText.toUpperCase();
     var b = document.createElement('div'); b.className='card-back';  b.textContent  = backText || '';
@@ -329,9 +315,18 @@
     return w;
   }
 
-  function renderSingle(it){ container.innerHTML=''; container.appendChild(flipCard(it.front,it.back)); }
-  function renderMultiFront(it){ container.innerHTML=''; container.appendChild(multiFront(it.front, ()=>renderMultiSplit(it))); }
+  function renderSingle(it){
+    splitHeader.style.display='none';
+    const extra = it.front==='Огонь' ? 'card-fire' : '';
+    container.innerHTML=''; container.appendChild(flipCard(it.front,it.back,extra));
+  }
+  function renderMultiFront(it){
+    splitHeader.style.display='none';
+    container.innerHTML=''; container.appendChild(multiFront(it.front, ()=>renderMultiSplit(it)));
+  }
   function renderMultiSplit(it){
+    splitTitle.textContent = it.front;
+    splitHeader.style.display='block';
     container.innerHTML='';
     container.appendChild(infoCard(it.labels[0], it.texts[0]));
     container.appendChild(infoCard(it.labels[1], it.texts[1]));
@@ -340,6 +335,7 @@
   function render(){
     var list = getFiltered();
     if(list.length===0){
+      splitHeader.style.display='none';
       container.innerHTML='<div class="card-static"><div class="card-title">Пусто</div><div class="card-text">Вы скрыли все элементы в настройках.</div></div>';
       progressEl.textContent='0 / 0';
       return;
@@ -350,7 +346,7 @@
     progressEl.textContent=(currentIndex+1)+' / '+list.length;
   }
 
-  /* кнопки */
+  /* навигация */
   document.getElementById('next-btn').onclick = ()=>{ const len=getFiltered().length||1; currentIndex=(currentIndex+1)%len; render(); };
 
   (function(){
@@ -374,11 +370,18 @@
     upd();
   })();
 
+  /* collapse из разбивки к фронту */
+  document.getElementById('collapse-split').onclick = ()=>{ 
+    const it = getCurrent();
+    if(it && it.type==='multi') renderMultiFront(it);
+  };
+
   /* горячие клавиши */
   const overlay = document.getElementById('settings-overlay');
   const openBtn = document.getElementById('open-settings');
   const closeBtn= document.getElementById('close-settings');
   const okBtn   = document.getElementById('settings-ok');
+
   function showMenu(){
     titleEl.textContent='Настройки';
     menu.classList.remove('hidden');
@@ -411,7 +414,7 @@
     });
   })();
 
-  /* ===== НАСТРОЙКИ: меню, список, формат ===== */
+  /* ===== НАСТРОЙКИ ===== */
   const menu    = document.getElementById('settings-menu');
   const elems   = document.getElementById('settings-elements');
   const formatV = document.getElementById('settings-format');
@@ -428,7 +431,7 @@
 
   /* список элементов */
   const listEl  = document.getElementById('settings-list');
-  document.getElementById('select-all').onclick = ()=>{ getFiltered; cardsData.forEach(c=>visible.add(c.front)); buildList(); render(); };
+  document.getElementById('select-all').onclick = ()=>{ cardsData.forEach(c=>visible.add(c.front)); buildList(); render(); };
   document.getElementById('clear-all').onclick  = ()=>{ visible.clear(); buildList(); render(); };
   function buildList(){
     listEl.innerHTML='';
@@ -442,30 +445,25 @@
     });
   }
 
-  /* формат (размеры) — сохраняем и применяем */
+  /* формат — применяем и сохраняем */
   const radios = document.querySelectorAll('input[name="sizeMode"]');
   function applySize(mode){
-    // режим 1: базовый — 18px везде
-    // режим 2: ×2 — 36px и для фронта, и для оборота/инфо
-    // режим 3: «во весь фронт» — фронт 64px, остальное базовое
-    if(mode==='1'){
+    if(mode==='1'){ /* И так вижу. */
       document.documentElement.style.setProperty('--text-scale', '1');
       document.documentElement.style.setProperty('--front-font', '18px');
-    }else if(mode==='2'){
+    }else if(mode==='2'){ /* Но можно и побольше. */
       document.documentElement.style.setProperty('--text-scale', '2');
       document.documentElement.style.setProperty('--front-font', '36px');
-    }else{ /* '3' */
+    }else{ /* А ещё можно побольше? */
       document.documentElement.style.setProperty('--text-scale', '1');
       document.documentElement.style.setProperty('--front-font', '64px');
     }
   }
-  // восстановить сохранённое
   try{
     const saved=localStorage.getItem('mmf_size_mode')||'1';
     radios.forEach(r=>{ if(r.value===saved) r.checked=true; });
     applySize(saved);
   }catch(e){}
-  // обработчик
   radios.forEach(r=>r.addEventListener('change', ()=>{
     if(!r.checked) return;
     applySize(r.value);
