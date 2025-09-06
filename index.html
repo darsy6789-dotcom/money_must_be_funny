@@ -18,8 +18,9 @@
     --button-primary:#4CAF50; --button-primary-hover:#3f9444;
     --modal-backdrop: rgba(0,0,0,.35);
 
-    /* масштаб текста в карточках (меняется настройкой) */
-    --text-scale:1; /* 1 / 1.15 / 1.3 */
+    /* размеры текста */
+    --text-scale: 1;                 /* влияет на оборот и инфо-карточки */
+    --front-font: calc(18px * var(--text-scale)); /* размер лицевой стороны по умолчанию */
   }
   body.dark{
     --page-bg: linear-gradient(rgba(0,0,0,.35), rgba(0,0,0,.35)),
@@ -60,12 +61,16 @@
   .card-inner{ position:relative; width:100%; height:100%; }
   .card-front, .card-back{
     position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
-    font-size:calc(18px * var(--text-scale)); /* ← масштабируем текст */
     padding:10px; border-radius:12px; border:1px solid var(--card-border);
     background:var(--card-bg); text-align:center;
   }
-  .card-front{ font-weight:700; letter-spacing:.3px; text-transform:uppercase; }
-  .card-back{ background:var(--back-bg); font-style:italic; }
+  /* Лицо — отдельная переменная размера */
+  .card-front{
+    font-weight:800; letter-spacing:.3px; text-transform:uppercase;
+    font-size: var(--front-font);
+  }
+  /* Оборот и «инфо» масштабируются общей шкалой */
+  .card-back{ background:var(--back-bg); font-style:italic; font-size: calc(18px * var(--text-scale)); }
 
   .card .card-back{ display:none; }
   .card.flipped .card-front{ display:none; }
@@ -79,13 +84,13 @@
     .card-back{ transform:rotateY(180deg); }
   }
 
-  /* статичные карточки для multi */
+  /* инфо-карточки (для multi) */
   .card-static{
     width:360px; min-height:200px; display:flex; flex-direction:column; gap:8px;
     padding:14px; border-radius:12px; border:1px solid var(--card-border); background:var(--card-bg);
   }
-  .card-title{ font-weight:700; font-size:calc(18px * var(--text-scale)); }
-  .card-text{ font-size:calc(16px * var(--text-scale)); line-height:1.35; }
+  .card-title{ font-weight:700; font-size: calc(18px * var(--text-scale)); }
+  .card-text{ font-size: calc(16px * var(--text-scale)); line-height:1.35; }
 
   /* кнопки */
   .buttons{ margin-top:22px; display:flex; gap:12px; }
@@ -112,7 +117,7 @@
     100%{opacity:0; transform:translate(40px,-60%) scale(1.2);}
   }
 
-  /* ===== ТУМБЛЕР ТЕМЫ ===== */
+  /* ===== ТУМБЛЕР ТЕМЫ (в правом верхнем углу) ===== */
   #theme-toggle-container{ position:fixed; top:16px; right:16px; z-index:10000; }
   .theme-toggle{
     width:64px; height:34px; background:rgba(255,255,255,.85);
@@ -130,11 +135,14 @@
   body.dark .theme-toggle .knob{ transform:translateX(30px); }
 
   /* ===== МОДАЛКА НАСТРОЕК ===== */
+  #open-settings{ padding:8px 14px; border-radius:8px; border:1px solid #ccc; background:#f6f6f6; cursor:pointer; }
+  #open-settings:hover{ filter:brightness(.92); }
+
   #settings-overlay{ position:fixed; inset:0; background:var(--modal-backdrop);
     display:flex; justify-content:center; align-items:center; z-index:9999; }
   #settings-overlay[hidden]{ display:none!important; }
   #settings-modal{
-    width:min(720px,92vw); max-height:86vh; overflow:auto;
+    width:min(760px,92vw); max-height:86vh; overflow:auto;
     background:var(--card-bg); border-radius:12px; border:1px solid var(--card-border);
     box-shadow:0 12px 40px rgba(0,0,0,.25);
   }
@@ -142,9 +150,20 @@
   .settings-header h2{ margin:0; font-size:18px; }
   #close-settings{ border:1px solid #000; background:#000; color:#fff; border-radius:8px; width:32px; height:32px; display:grid; place-items:center; cursor:pointer; font-size:18px; }
   .settings-body{ padding:14px 16px; }
-  .settings-footer{ padding:12px 16px; border-top:1px solid var(--card-border); display:flex; justify-content:flex-end; }
+  .settings-footer{ padding:12px 16px; border-top:1px solid var(--card-border); display:flex; justify-content:flex-end; gap:8px; }
   .btn-secondary{ background:#f3f3f3; color:#222; border:1px solid #ccc; border-radius:8px; padding:8px 12px; cursor:pointer; }
   body.dark .btn-secondary{ background:#222; color:#eee; border-color:#444; }
+  .hidden{ display:none!important; }
+
+  .menu-grid{ display:grid; gap:10px; grid-template-columns:1fr 1fr; }
+  .menu-btn{
+    padding:12px; border:1px solid #999; background:#000; color:#fff;
+    border-radius:10px; cursor:pointer; text-align:center; font-weight:700;
+  }
+  body:not(.dark) .menu-btn{ background:#000; color:#fff; border-color:#000; }
+
+  #settings-list{ list-style:none; margin:8px 0 0; padding:0; display:grid; grid-template-columns:repeat(2, 1fr); gap:8px 16px; }
+  #settings-list li{ display:flex; align-items:center; gap:8px; padding:6px 8px; border:1px solid var(--card-border); border-radius:8px; background:var(--back-bg); }
 
   .format-grid{ display:grid; gap:10px; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); }
   .format-item{ border:1px solid var(--card-border); border-radius:10px; padding:10px 12px; background:var(--back-bg); display:flex; gap:10px; align-items:center; }
@@ -167,7 +186,7 @@
   Твоя задача — монетизировать каждый элемент.
 </div>
 
-<button id="open-settings" class="btn-secondary" type="button" style="margin: 8px 0 6px;">Настройки</button>
+<button id="open-settings" type="button" style="margin: 10px 0 6px;">Настройки</button>
 
 <div id="progress" aria-live="polite"></div>
 <div id="card-container"></div>
@@ -204,14 +223,33 @@
       <button id="close-settings" type="button" aria-label="Закрыть">×</button>
     </div>
     <div class="settings-body">
-      <h3 style="margin:0 0 8px 0;font-size:16px;">Формат карточек · размер текста</h3>
-      <div class="format-grid" role="group" aria-label="Размер текста">
-        <label class="format-item"><input type="radio" name="tScale" value="1" checked style="accent-color:#4CAF50"> И так вижу</label>
-        <label class="format-item"><input type="radio" name="tScale" value="1.15" style="accent-color:#4CAF50"> Но можно и побольше</label>
-        <label class="format-item"><input type="radio" name="tScale" value="1.3" style="accent-color:#4CAF50"> А ещё можно побольше?</label>
+      <div id="settings-menu" class="menu-grid">
+        <button class="menu-btn" id="open-elements" type="button">Список элементов</button>
+        <button class="menu-btn" id="open-format"   type="button">Формат карточек</button>
+      </div>
+
+      <!-- Список элементов -->
+      <div id="settings-elements" class="hidden">
+        <p style="margin-top:0">Вы можете убрать из списка ненужный элемент, сняв галочку.</p>
+        <div style="display:flex; gap:8px; margin-bottom:8px;">
+          <button id="select-all" class="btn-secondary" type="button">Выбрать всё</button>
+          <button id="clear-all"  class="btn-secondary" type="button">Сбросить всё</button>
+        </div>
+        <ul id="settings-list"></ul>
+      </div>
+
+      <!-- Формат карточек -->
+      <div id="settings-format" class="hidden">
+        <p style="margin-top:0">Выберите размер текста:</p>
+        <div class="format-grid" role="group" aria-label="Размер текста">
+          <label class="format-item"><input type="radio" name="sizeMode" value="1" checked style="accent-color:#4CAF50"> И так вижу (18px)</label>
+          <label class="format-item"><input type="radio" name="sizeMode" value="2" style="accent-color:#4CAF50"> В 2 раза больше (36px)</label>
+          <label class="format-item"><input type="radio" name="sizeMode" value="3" style="accent-color:#4CAF50"> Во весь фронт (64px, только лицевая сторона)</label>
+        </div>
       </div>
     </div>
     <div class="settings-footer">
+      <button id="back-to-menu" class="btn-secondary hidden" type="button">← Назад</button>
       <button id="settings-ok" class="btn-secondary" type="button">Готово</button>
     </div>
   </div>
@@ -252,10 +290,16 @@
   ];
   cardsData.sort((a,b)=>a.front.localeCompare(b.front,'ru'));
 
+  /* видимость для «Списка элементов» */
+  var visible = new Set(cardsData.map(c=>c.front));
+
   var currentIndex = 0;
   var container = document.getElementById('card-container');
   var progressEl = document.getElementById('progress');
 
+  function getFiltered(){ return cardsData.filter(c=>visible.has(c.front)); }
+
+  /* фабрики */
   function flipCard(frontText, backText){
     var w = document.createElement('div'); w.className='card'; w.tabIndex=0;
     var i = document.createElement('div'); i.className='card-inner';
@@ -294,13 +338,20 @@
   }
 
   function render(){
-    var it = cardsData[currentIndex];
+    var list = getFiltered();
+    if(list.length===0){
+      container.innerHTML='<div class="card-static"><div class="card-title">Пусто</div><div class="card-text">Вы скрыли все элементы в настройках.</div></div>';
+      progressEl.textContent='0 / 0';
+      return;
+    }
+    currentIndex=((currentIndex%list.length)+list.length)%list.length;
+    var it=list[currentIndex];
     if(it.type==='single') renderSingle(it); else renderMultiFront(it);
-    progressEl.textContent = (currentIndex+1) + ' / ' + cardsData.length;
+    progressEl.textContent=(currentIndex+1)+' / '+list.length;
   }
 
   /* кнопки */
-  document.getElementById('next-btn').onclick = ()=>{ currentIndex=(currentIndex+1)%cardsData.length; render(); };
+  document.getElementById('next-btn').onclick = ()=>{ const len=getFiltered().length||1; currentIndex=(currentIndex+1)%len; render(); };
 
   (function(){
     var prevBtn=document.getElementById('prev-btn');
@@ -310,7 +361,6 @@
     function isDark(){ return document.body.classList.contains('dark'); }
     function upd(){ label.textContent = isDark() ? 'На' : 'Назад'; }
     window.__updatePeachUI = upd;
-
     prevBtn.onclick = ()=>{
       if(isDark()){
         think.style.display='none'; smile.style.display='';
@@ -318,7 +368,8 @@
         prevBtn.appendChild(puff); setTimeout(()=>puff.remove(),720);
         setTimeout(()=>{smile.style.display='none';think.style.display='';},900);
       }
-      currentIndex=(currentIndex-1+cardsData.length)%cardsData.length; render();
+      const len=getFiltered().length||1;
+      currentIndex=(currentIndex-1+len)%len; render();
     };
     upd();
   })();
@@ -328,8 +379,16 @@
   const openBtn = document.getElementById('open-settings');
   const closeBtn= document.getElementById('close-settings');
   const okBtn   = document.getElementById('settings-ok');
-  function openSettings(){ overlay.hidden=false; }
+  function showMenu(){
+    titleEl.textContent='Настройки';
+    menu.classList.remove('hidden');
+    elems.classList.add('hidden');
+    formatV.classList.add('hidden');
+    backBtn.classList.add('hidden');
+  }
+  function openSettings(){ overlay.hidden=false; showMenu(); }
   function closeSettings(){ overlay.hidden=true; }
+
   openBtn.onclick=openSettings; closeBtn.onclick=closeSettings; okBtn.onclick=closeSettings;
   overlay.addEventListener('click',e=>{ if(e.target===overlay) closeSettings(); });
 
@@ -352,25 +411,66 @@
     });
   })();
 
-  /* формат: масштаб текста */
-  (function(){
-    const radios = document.querySelectorAll('input[name="tScale"]');
-    // восстановить сохранённое значение
-    try{
-      const saved = localStorage.getItem('mmf_text_scale');
-      if(saved){ document.documentElement.style.setProperty('--text-scale', saved);
-        radios.forEach(r=>{ if(r.value===saved) r.checked=true; });
-      }
-    }catch(e){}
-    // обработчик выбора
-    radios.forEach(r=>{
-      r.addEventListener('change', ()=>{
-        if(!r.checked) return;
-        document.documentElement.style.setProperty('--text-scale', r.value);
-        try{ localStorage.setItem('mmf_text_scale', r.value); }catch(e){}
-      });
+  /* ===== НАСТРОЙКИ: меню, список, формат ===== */
+  const menu    = document.getElementById('settings-menu');
+  const elems   = document.getElementById('settings-elements');
+  const formatV = document.getElementById('settings-format');
+  const titleEl = document.getElementById('settings-title');
+  const backBtn = document.getElementById('back-to-menu');
+  const btnOpenElems = document.getElementById('open-elements');
+  const btnOpenFormat= document.getElementById('open-format');
+
+  backBtn.onclick = showMenu;
+  btnOpenElems.onclick = ()=>{ titleEl.textContent='Настройки · Список элементов';
+    menu.classList.add('hidden'); elems.classList.remove('hidden'); formatV.classList.add('hidden'); backBtn.classList.remove('hidden'); buildList(); };
+  btnOpenFormat.onclick = ()=>{ titleEl.textContent='Настройки · Формат карточек';
+    menu.classList.add('hidden'); elems.classList.add('hidden'); formatV.classList.remove('hidden'); backBtn.classList.remove('hidden'); };
+
+  /* список элементов */
+  const listEl  = document.getElementById('settings-list');
+  document.getElementById('select-all').onclick = ()=>{ getFiltered; cardsData.forEach(c=>visible.add(c.front)); buildList(); render(); };
+  document.getElementById('clear-all').onclick  = ()=>{ visible.clear(); buildList(); render(); };
+  function buildList(){
+    listEl.innerHTML='';
+    cardsData.slice().sort((a,b)=>a.front.localeCompare(b.front,'ru')).forEach(c=>{
+      const li=document.createElement('li');
+      const label=document.createElement('label');
+      const cb=document.createElement('input'); cb.type='checkbox'; cb.checked=visible.has(c.front);
+      cb.onchange=()=>{ if(cb.checked) visible.add(c.front); else visible.delete(c.front); render(); };
+      label.appendChild(cb); label.appendChild(document.createTextNode(' '+c.front));
+      li.appendChild(label); listEl.appendChild(li);
     });
-  })();
+  }
+
+  /* формат (размеры) — сохраняем и применяем */
+  const radios = document.querySelectorAll('input[name="sizeMode"]');
+  function applySize(mode){
+    // режим 1: базовый — 18px везде
+    // режим 2: ×2 — 36px и для фронта, и для оборота/инфо
+    // режим 3: «во весь фронт» — фронт 64px, остальное базовое
+    if(mode==='1'){
+      document.documentElement.style.setProperty('--text-scale', '1');
+      document.documentElement.style.setProperty('--front-font', '18px');
+    }else if(mode==='2'){
+      document.documentElement.style.setProperty('--text-scale', '2');
+      document.documentElement.style.setProperty('--front-font', '36px');
+    }else{ /* '3' */
+      document.documentElement.style.setProperty('--text-scale', '1');
+      document.documentElement.style.setProperty('--front-font', '64px');
+    }
+  }
+  // восстановить сохранённое
+  try{
+    const saved=localStorage.getItem('mmf_size_mode')||'1';
+    radios.forEach(r=>{ if(r.value===saved) r.checked=true; });
+    applySize(saved);
+  }catch(e){}
+  // обработчик
+  radios.forEach(r=>r.addEventListener('change', ()=>{
+    if(!r.checked) return;
+    applySize(r.value);
+    try{ localStorage.setItem('mmf_size_mode', r.value); }catch(e){}
+  }));
 
   render();
 })();
