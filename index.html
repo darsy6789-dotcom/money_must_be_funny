@@ -18,6 +18,8 @@
       --button-primary:#4CAF50; --button-primary-hover:#45a049;
       --modal-backdrop: rgba(0,0,0,.35);
       --menu-btn-bg:#000; --menu-btn-border:#000; --menu-btn-text:#fff;
+
+      /* быстрый тумблер (капсула) */
       --qt-bg:#f2f2f2; --qt-border:#cfcfcf; --qt-knob:#fff;
       --qt-sun:#ffb300; --qt-moon:#9bbcff;
     }
@@ -36,13 +38,26 @@
     }
 
     /* ===== БАЗА ===== */
+    *{ box-sizing:border-box; }
     body{
       margin:0; min-height:100vh; display:flex; flex-direction:column; align-items:center;
       padding:40px; font-family:sans-serif;
       background:var(--page-bg); color:var(--text);
     }
+    .topbar{
+      position:fixed; right:16px; top:16px; display:flex; gap:8px; z-index:10000;
+    }
+    /* капсула тумблера темы */
+    .qt-btn{
+      display:flex; align-items:center; gap:8px; padding:6px 10px;
+      background:var(--qt-bg); border:1px solid var(--qt-border); border-radius:999px;
+      cursor:pointer; user-select:none;
+    }
+    .qt-knob{ width:20px; height:20px; border-radius:50%; background:var(--qt-knob); display:inline-block; }
+    .qt-sun{ color:var(--qt-sun); } .qt-moon{ color:var(--qt-moon); }
+
     .game-title{
-      margin:0 0 14px 0; padding:10px 16px; display:inline-block;
+      margin:40px 0 14px 0; padding:10px 16px; display:inline-block;
       font-size:44px; font-weight:800; color:var(--headline-text);
       background:var(--headline-bg); border:2px solid var(--headline-border); border-radius:14px;
     }
@@ -80,6 +95,7 @@
       .card-back{ transform:rotateY(180deg); }
     }
 
+    /* статичные карточки (для multi-ответов) */
     .card-static{
       width:320px; min-height:180px; display:flex; flex-direction:column; gap:8px;
       padding:14px; border-radius:12px; border:1px solid var(--card-border);
@@ -88,6 +104,7 @@
     .card-title{ font-weight:600; font-size:18px; }
     .card-text{ font-size:16px; line-height:1.35; }
 
+    /* кнопки листания */
     .buttons{ margin-top:20px; display:flex; gap:10px; }
     .btn-nav{
       display:flex; align-items:center; gap:8px;
@@ -105,9 +122,56 @@
       border-radius:8px; background:var(--back-bg); color:var(--text); cursor:pointer;
     }
     .split-back-btn:hover{ filter:brightness(.95); }
+
+    /* ===== НАСТРОЙКИ (модалка) ===== */
+    #open-settings{
+      padding:8px 14px; border-radius:8px; border:1px solid var(--menu-btn-border);
+      background:var(--menu-btn-bg); color:var(--menu-btn-text); cursor:pointer; margin:12px 0;
+    }
+    #open-settings:hover{ filter:brightness(.92); }
+
+    #settings-overlay{
+      position:fixed; inset:0; background:var(--modal-backdrop);
+      display:flex; justify-content:center; align-items:center; z-index:9999;
+    }
+    #settings-overlay[hidden]{ display:none !important; }
+    #settings-modal{
+      width:min(700px, 92vw); max-height:86vh; overflow:auto;
+      background:var(--card-bg); border-radius:12px; border:1px solid var(--card-border); box-shadow:0 12px 40px rgba(0,0,0,.2);
+    }
+    .settings-header{ display:flex; justify-content:space-between; align-items:center; padding:12px 16px; border-bottom:1px solid var(--card-border); }
+    .settings-header h2{ margin:0; font-size:18px; }
+    #close-settings{ border:1px solid #000; background:#000; color:#fff; border-radius:8px; width:32px; height:32px; display:grid; place-items:center; cursor:pointer; font-size:18px; }
+    .settings-body{ padding:12px 16px; }
+    .settings-footer{ padding:12px 16px; border-top:1px solid var(--card-border); display:flex; justify-content:flex-end; gap:8px; }
+    .hidden{ display:none !important; }
+
+    .menu-grid{ display:grid; gap:10px; grid-template-columns:1fr; }
+    .menu-btn{
+      padding:12px; border:1px solid var(--menu-btn-border); background:var(--menu-btn-bg); color:var(--menu-btn-text);
+      border-radius:10px; cursor:pointer; text-align:center; font-weight:700;
+    }
+    .menu-btn:hover{ filter:brightness(.9); }
+
+    #settings-list{ list-style:none; margin:8px 0 0; padding:0; display:grid; grid-template-columns:repeat(2, 1fr); gap:8px 16px; }
+    #settings-list li{ display:flex; align-items:center; gap:8px; padding:6px 8px; border:1px solid var(--card-border); border-radius:8px; background:var(--back-bg); }
+
+    .btn-secondary{
+      background:#f3f3f3; color:#222; border:1px solid #ccc; border-radius:8px; padding:8px 12px; cursor:pointer;
+    }
+    body.dark .btn-secondary{ background:#222; color:#eee; border-color:#444; }
   </style>
 </head>
 <body>
+
+<!-- быстрый тумблер темы (в правом верхнем углу) -->
+<div class="topbar">
+  <button id="quick-theme" type="button" class="qt-btn" title="Тёмная тема">
+    <span class="qt-sun">☀️</span>
+    <span class="qt-knob"></span>
+    <span class="qt-moon">🌙</span>
+  </button>
+</div>
 
 <h1 class="game-title">КАРТОЧНАЯ ИГРА “MONEY MUST BE FUNNY”</h1>
 <div class="rules">
@@ -115,9 +179,11 @@
   Твоя задача — монетизировать каждый элемент.
 </div>
 
+<button id="open-settings" type="button">Настройки</button>
+
 <div id="progress" aria-live="polite"></div>
 
-<!-- Локальный back для split -->
+<!-- локальный back для режима двух карточек -->
 <div id="split-header" class="split-hidden">
   <button id="split-back" type="button" class="split-back-btn">
     ← Назад к «<span id="split-title"></span>»
@@ -131,128 +197,281 @@
   <button id="next-btn" type="button" class="btn-nav">Вперёд</button>
 </div>
 
-<!-- Мини-тумблер темы -->
-<div id="theme-toggle-container">
-  <button id="theme-toggle">🌞 / 🌙</button>
+<!-- Модалка настроек -->
+<div id="settings-overlay" hidden>
+  <div id="settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+    <div class="settings-header">
+      <h2 id="settings-title">Настройки</h2>
+      <button id="close-settings" type="button">×</button>
+    </div>
+    <div class="settings-body">
+      <div id="settings-menu" class="menu-grid">
+        <button class="menu-btn" id="open-elements" type="button">Список элементов</button>
+      </div>
+
+      <div id="settings-elements" class="hidden">
+        <p style="margin-top:0">Вы можете убрать из списка ненужный вам элемент, нажав на пункт с галочкой.</p>
+        <div style="display:flex; gap:8px; margin-bottom:8px;">
+          <button id="select-all" class="btn-secondary" type="button">Выбрать всё</button>
+          <button id="clear-all" class="btn-secondary" type="button">Сбросить всё</button>
+        </div>
+        <ul id="settings-list"></ul>
+      </div>
+    </div>
+    <div class="settings-footer">
+      <button id="back-to-menu" class="btn-secondary hidden" type="button">← Назад</button>
+      <button id="settings-ok" type="button">Готово</button>
+    </div>
+  </div>
 </div>
+<!-- /Модалка настроек -->
 
 <script>
 (function(){
+  /* ——— данные ——— */
   var cardsData = [
     { type:'single', front:'Земля',  back:'Ресурсы, сельское хозяйство, недвижимость' },
     { type:'single', front:'Вода',   back:'Продажа питьевой воды, гидроэнергетика, туризм' },
     { type:'single', front:'Воздух', back:'Туризм, воздух в баллонах, реклама на воздушных шарах' },
     { type:'single', front:'Огонь',  back:'Энергетика, обогрев, кулинария' },
-    { type:'multi',  front:'Блёстки',
-      labels:['Косметика','Одежда'],
-      texts:['Косметика: тени, лаки.','Одежда: ткани с блёстками.'] }
-  ];
-  cardsData.sort((a,b)=>a.front.localeCompare(b.front,'ru'));
-  var visible = new Set(cardsData.map(c=>c.front));
-  var currentIndex=0;
-  var container=document.getElementById('card-container');
-  var progress=document.getElementById('progress');
 
-  // split header
+    { type:'multi',  front:'Блёстки',
+      labels:['Косметика','Одежда и аксессуары'],
+      texts: ['Косметика: тени, хайлайтеры, лаки для ногтей.','Одежда и аксессуары: ткани с блёстками, сумки, украшения.'] },
+
+    { type:'multi',  front:'Песок',
+      labels:['Стекло','Строительные материалы'],
+      texts: ['Плавишь песок → стекло (окна, бутылки, зеркала, экраны).',
+              'Стройматериалы: бетон, цемент, кирпич, плитка, асфальт.'] },
+
+    { type:'multi',  front:'Смола',
+      labels:['Клей','Музыкальные инструменты'],
+      texts: ['Производство клея.','Лаки/смолы для скрипок и инструментов.'] },
+
+    { type:'multi',  front:'Сталь',
+      labels:['Малые архитектурные формы','Спорт/дом'],
+      texts: ['Стеллажи, каркасы столов, уличные кашпо.','Турники, стойки для штанги, кронштейны, крепёж.'] },
+
+    { type:'multi',  front:'Хлопок',
+      labels:['Одежда и базовые изделия','Домашний декор'],
+      texts: ['Футболки, постельное бельё, полотенца, пижамы.','Шторы, скатерти, пледы, чехлы на мебель.'] },
+
+    { type:'multi',  front:'Шерсть',
+      labels:['Тёплые изделия','Интерьер'],
+      texts: ['Свитера, носки, варежки, шарфы, пледы.','Покрывала, ковры, подушки, панно из войлока.'] }
+  ];
+  /* алфавит по-русски */
+  cardsData.sort(function(a,b){ return a.front.localeCompare(b.front,'ru'); });
+
+  /* видимость элементов */
+  var visible = new Set(cardsData.map(c => c.front));
+
+  var currentIndex = 0;
+  var container   = document.getElementById('card-container');
+  var progressEl  = document.getElementById('progress');
+
+  /* ——— split header ——— */
   var splitHeader = document.getElementById('split-header');
   var splitTitle  = document.getElementById('split-title');
   var splitBack   = document.getElementById('split-back');
   function isSplitOpen(){ return !splitHeader.classList.contains('split-hidden'); }
-  function openSplit(title){ splitTitle.textContent=title; splitHeader.classList.remove('split-hidden'); }
+  function openSplit(title){ splitTitle.textContent = title; splitHeader.classList.remove('split-hidden'); }
   function closeSplit(){ splitHeader.classList.add('split-hidden'); }
 
-  function getFiltered(){ return cardsData.filter(c=>visible.has(c.front)); }
+  function getFiltered(){ return cardsData.filter(c => visible.has(c.front)); }
 
+  /* фабрики карточек */
   function createFlipCard(frontText, backText){
-    var wrapper=document.createElement('div'); wrapper.className='card';
-    var inner=document.createElement('div'); inner.className='card-inner';
-    var front=document.createElement('div'); front.className='card-front'; front.textContent=frontText.toUpperCase();
-    var back=document.createElement('div'); back.className='card-back'; back.textContent=backText||'';
+    var wrapper = document.createElement('div'); wrapper.className = 'card';
+    var inner   = document.createElement('div'); inner.className   = 'card-inner';
+    var front   = document.createElement('div'); front.className   = 'card-front'; front.textContent = frontText.toUpperCase();
+    if (frontText.toLowerCase() === 'огонь') front.style.color = 'crimson'; /* слово ОГОНЬ — красным */
+    var back    = document.createElement('div'); back.className    = 'card-back';  back.textContent  = backText || '';
     inner.appendChild(front); inner.appendChild(back); wrapper.appendChild(inner);
-    wrapper.onclick=function(){ wrapper.classList.toggle('flipped'); };
+    wrapper.onclick = function(){ wrapper.classList.toggle('flipped'); };
     return wrapper;
   }
-  function createInfoCard(title,text){
-    var box=document.createElement('div'); box.className='card-static';
-    var t=document.createElement('div'); t.className='card-title'; t.textContent=title;
-    var d=document.createElement('div'); d.className='card-text'; d.textContent=text;
+  function createInfoCard(title, text){
+    var box = document.createElement('div'); box.className = 'card-static';
+    var t = document.createElement('div'); t.className = 'card-title'; t.textContent = title;
+    var d = document.createElement('div'); d.className = 'card-text';  d.textContent = text;
     box.appendChild(t); box.appendChild(d); return box;
   }
-  function createMultiFrontCard(title,onOpen){
-    var wrapper=document.createElement('div'); wrapper.className='card';
-    var inner=document.createElement('div'); inner.className='card-inner';
-    var front=document.createElement('div'); front.className='card-front'; front.textContent=title.toUpperCase();
-    var back=document.createElement('div'); back.className='card-back'; back.textContent='';
+  function createMultiFrontCard(title, onOpen){
+    var wrapper = document.createElement('div'); wrapper.className = 'card';
+    var inner   = document.createElement('div'); inner.className   = 'card-inner';
+    var front   = document.createElement('div'); front.className   = 'card-front'; front.textContent = title.toUpperCase();
+    var back    = document.createElement('div'); back.className    = 'card-back';  back.textContent  = ''; // без подсказки
     inner.appendChild(front); inner.appendChild(back); wrapper.appendChild(inner);
-    wrapper.onclick=function(){ if(onOpen) onOpen(); };
+    wrapper.onclick = function(){ if (onOpen) onOpen(); };
     return wrapper;
   }
 
+  /* рендеры */
   function renderSingle(item){
     closeSplit();
-    container.innerHTML='';
-    container.appendChild(createFlipCard(item.front,item.back));
+    container.innerHTML = '';
+    container.appendChild(createFlipCard(item.front, item.back));
   }
   function renderMultiFront(item){
     closeSplit();
-    container.innerHTML='';
-    container.appendChild(createMultiFrontCard(item.front,function(){ renderMultiSplit(item); }));
+    container.innerHTML = '';
+    container.appendChild(createMultiFrontCard(item.front, function(){ renderMultiSplit(item); }));
   }
   function renderMultiSplit(item){
     openSplit(item.front);
-    container.innerHTML='';
+    container.innerHTML = '';
     container.appendChild(createInfoCard(item.labels[0], item.texts[0]));
     container.appendChild(createInfoCard(item.labels[1], item.texts[1]));
   }
 
   function render(){
-    var list=getFiltered();
-    if(list.length===0){ container.innerHTML='Пусто'; progress.textContent='0/0'; return; }
-    currentIndex=((currentIndex%list.length)+list.length)%list.length;
-    var item=list[currentIndex];
-    if(item.type==='single') renderSingle(item);
+    var list = getFiltered();
+    if(list.length === 0){
+      container.innerHTML = '<div class="card-static"><div class="card-title">Пусто</div><div class="card-text">Вы скрыли все элементы в настройках.</div></div>';
+      progressEl.textContent = '0 / 0';
+      return;
+    }
+    currentIndex = ((currentIndex % list.length) + list.length) % list.length;
+    var item = list[currentIndex];
+    if (item.type === 'single') renderSingle(item);
     else renderMultiFront(item);
-    progress.textContent=(currentIndex+1)+' / '+list.length;
+    progressEl.textContent = (currentIndex + 1) + ' / ' + list.length;
   }
 
-  // локальный back
-  if(splitBack){
-    splitBack.addEventListener('click',function(){
-      var list=getFiltered(); var item=list[currentIndex];
-      if(item && item.type==='multi') renderMultiFront(item);
+  /* локальный back из split */
+  if (splitBack){
+    splitBack.addEventListener('click', function(){
+      var list = getFiltered();
+      var item = list[currentIndex];
+      if (item && item.type === 'multi') renderMultiFront(item);
     });
   }
 
-  // кнопки
-  document.getElementById('next-btn').onclick=function(){
-    var len=getFiltered().length||1;
-    currentIndex=(currentIndex+1)%len;
+  /* листание кнопками */
+  document.getElementById('next-btn').onclick = function(){
+    var len = getFiltered().length || 1;
+    currentIndex = (currentIndex + 1) % len;
     render();
   };
-  document.getElementById('prev-btn').onclick=function(){
-    var list=getFiltered(); var item=list[currentIndex];
-    if(item && item.type==='multi' && isSplitOpen()){ renderMultiFront(item); return; }
-    var len=list.length||1; currentIndex=(currentIndex-1+len)%len; render();
+  document.getElementById('prev-btn').onclick = function(){
+    var list = getFiltered(); var item = list[currentIndex];
+    if (item && item.type === 'multi' && isSplitOpen()){
+      renderMultiFront(item); // сначала закрываем split к обложке
+      return;
+    }
+    var len = list.length || 1;
+    currentIndex = (currentIndex - 1 + len) % len;
+    render();
   };
 
-  // горячие клавиши
-  document.addEventListener('keydown',function(e){
-    if(e.key==='ArrowLeft'||e.key==='a'||e.key==='A'){
-      var list=getFiltered(); var item=list[currentIndex];
-      if(item && item.type==='multi' && isSplitOpen()){ renderMultiFront(item); }
-      else{ var len=list.length||1; currentIndex=(currentIndex-1+len)%len; render(); }
+  /* горячие клавиши: ←/A, →/D, Esc */
+  document.addEventListener('keydown', function(e){
+    const tag = (e.target && e.target.tagName) ? e.target.tagName.toLowerCase() : '';
+    if (tag === 'input' || tag === 'textarea' || tag === 'select' || e.isComposing) return;
+
+    if (e.key === 'Escape'){
+      // если открыт split — свернуть его к обложке
+      var list = getFiltered(); var item = list[currentIndex];
+      if (item && item.type === 'multi' && isSplitOpen()){
+        renderMultiFront(item); e.preventDefault(); return;
+      }
+      // иначе — открыть/закрыть настройки
+      toggleSettings();
       e.preventDefault(); return;
     }
-    if(e.key==='ArrowRight'||e.key==='d'||e.key==='D'){
-      var len=getFiltered().length||1; currentIndex=(currentIndex+1)%len; render(); e.preventDefault(); return;
+
+    if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A'){
+      var listL = getFiltered(); var itemL = listL[currentIndex];
+      if (itemL && itemL.type === 'multi' && isSplitOpen()){
+        renderMultiFront(itemL);
+      } else {
+        var lenL = listL.length || 1;
+        currentIndex = (currentIndex - 1 + lenL) % lenL;
+        render();
+      }
+      e.preventDefault(); return;
+    }
+    if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D'){
+      var lenR = getFiltered().length || 1;
+      currentIndex = (currentIndex + 1) % lenR;
+      render();
+      e.preventDefault(); return;
     }
   });
 
-  // тумблер темы
-  document.getElementById('theme-toggle').onclick=function(){
-    document.body.classList.toggle('dark');
-  };
+  /* ——— быстрый тумблер темы (капсула) ——— */
+  var quickThemeBtn = document.getElementById('quick-theme');
+  function applyTheme(dark){
+    document.body.classList.toggle('dark', dark);
+    try { localStorage.setItem('mmf_theme', dark ? 'dark' : 'light'); } catch(e){}
+  }
+  try { applyTheme(localStorage.getItem('mmf_theme') === 'dark'); } catch(e){}
+  quickThemeBtn.addEventListener('click', function(){
+    applyTheme(!document.body.classList.contains('dark'));
+  });
 
+  /* ——— НАСТРОЙКИ ——— */
+  var overlay = document.getElementById('settings-overlay');
+  var btnOpen = document.getElementById('open-settings');
+  var btnClose= document.getElementById('close-settings');
+  var btnOk   = document.getElementById('settings-ok');
+  var btnBack = document.getElementById('back-to-menu');
+  var menu    = document.getElementById('settings-menu');
+  var elems   = document.getElementById('settings-elements');
+  var listEl  = document.getElementById('settings-list');
+  var titleEl = document.getElementById('settings-title');
+  var btnOpenElems = document.getElementById('open-elements');
+  var btnSelectAll = document.getElementById('select-all');
+  var btnClearAll  = document.getElementById('clear-all');
+
+  function showMenu(){
+    titleEl.textContent = 'Настройки';
+    menu.classList.remove('hidden');
+    elems.classList.add('hidden');
+    btnBack.classList.add('hidden');
+  }
+  function showElems(){
+    titleEl.textContent = 'Настройки · Список элементов';
+    menu.classList.add('hidden');
+    elems.classList.remove('hidden');
+    btnBack.classList.remove('hidden');
+    buildList();
+  }
+  function toggleSettings(){
+    if (overlay.hidden){ overlay.hidden = false; showMenu(); }
+    else overlay.hidden = true;
+  }
+  btnOpen.onclick  = () => { overlay.hidden = false; showMenu(); };
+  btnClose.onclick = () => { overlay.hidden = true; };
+  btnOk.onclick    = () => { overlay.hidden = true; };
+  btnBack.onclick  = showMenu;
+  btnOpenElems.onclick = showElems;
+  overlay.addEventListener('click', function(e){ if(e.target === overlay) overlay.hidden = true; });
+
+  function buildList(){
+    listEl.innerHTML = '';
+    var data = cardsData.slice().sort(function(a,b){ return a.front.localeCompare(b.front,'ru'); });
+    data.forEach(function(c){
+      var li = document.createElement('li');
+      var label = document.createElement('label');
+      var cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.checked = visible.has(c.front);
+      cb.onchange = function(){
+        if (cb.checked) visible.add(c.front); else visible.delete(c.front);
+        render();
+      };
+      label.appendChild(cb);
+      label.appendChild(document.createTextNode(' ' + c.front));
+      li.appendChild(label);
+      listEl.appendChild(li);
+    });
+  }
+  btnSelectAll.onclick = function(){ cardsData.forEach(c => visible.add(c.front)); buildList(); render(); };
+  btnClearAll.onclick  = function(){ visible.clear(); buildList(); render(); };
+
+  /* старт */
   render();
 })();
 </script>
