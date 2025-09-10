@@ -1,166 +1,586 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>КАРТОЧНАЯ ИГРА “MONEY MUST BE FUNNY”</title>
-  <style>
-    /* ===== ТЕМА (переменные) ===== */
-    :root{
-      --page-bg: linear-gradient(rgba(255,255,255,.35), rgba(255,255,255,.35)),
-                 url("./money-fire.png") center/cover no-repeat fixed;
-      --text:#333;
-      --card-bg: rgba(255,255,255,.88);
-      --card-border:#ccc;
-      --back-bg: rgba(234,234,234,.88);
-      --pill-bg:#111;
-      --headline-bg:#111; --headline-border:#000; --headline-text:#fff;
-      --button-primary:#4CAF50; --button-primary-hover:#45a049;
-      --modal-backdrop: rgba(0,0,0,.35);
-      --menu-btn-bg:#000; --menu-btn-border:#000; --menu-btn-text:#fff;
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>КАРТОЧНАЯ ИГРА “MONEY MUST BE FUNNY”</title>
 
-      /* quick toggle (тумблер солнце/луна) */
-      --qt-bg:#f2f2f2; --qt-border:#cfcfcf; --qt-knob:#fff;
-      --qt-sun:#ffb300; --qt-moon:#9bbcff;
-    }
+<style>
+/* ===== ТЕМА (переменные) ===== */
+:root{
+  --page-bg: linear-gradient(rgba(255,255,255,.35), rgba(255,255,255,.35)),
+             url("./money-fire.png") center/cover no-repeat fixed;
 
-    body.dark{
-      --page-bg: linear-gradient(rgba(0,0,0,.35), rgba(0,0,0,.35)),
-                 url("./money-fire-night.png") center/cover no-repeat fixed;
-      --text:#eee;
-      --card-bg: rgba(20,20,20,.95);
-      --card-border:#3a3a3a;
-      --back-bg: rgba(30,30,30,.95);
-      --pill-bg:#000;
-      --headline-bg:#000; --headline-border:#000; --headline-text:#fff;
-      --button-primary:#278f3a; --button-primary-hover:#1f7c31;
-      --modal-backdrop: rgba(0,0,0,.65);
-      --menu-btn-bg:#111; --menu-btn-border:#000; --menu-btn-text:#fff;
-    }
+  --text:#333;
+  --card-bg: rgba(255,255,255,.88);
+  --card-border:#ccc;
+  --back-bg: rgba(234,234,234,.88);
+  --pill-bg:#111;
 
-    /* ===== БАЗА ===== */
-    body{
-      margin:0; min-height:100vh; display:flex; flex-direction:column; align-items:center;
-      padding:40px; font-family:sans-serif;
-      background:var(--page-bg); color:var(--text);
-    }
+  --headline-bg:#111; --headline-border:#000; --headline-text:#fff;
 
-    .game-title{
-      margin:0 0 14px 0; padding:10px 16px; display:inline-block;
-      font-size:44px; font-weight:800; color:var(--headline-text);
-      background:var(--headline-bg); border:2px solid var(--headline-border); border-radius:14px;
-    }
+  --button-primary:#4CAF50; --button-primary-hover:#45a049;
 
-    .rules{ font-size:16px; max-width:720px; text-align:center; margin-bottom:8px; }
+  --modal-backdrop: rgba(0,0,0,.35);
 
-    #progress{
-      font-size:14px; font-weight:700; color:#fff;
-      background:var(--pill-bg); padding:6px 12px; border-radius:999px;
-      display:inline-block; margin:6px 0 12px;
-    }
+  --menu-btn-bg:#000; --menu-btn-border:#000; --menu-btn-text:#fff;
 
-    #card-container{ width:100%; display:flex; gap:16px; flex-wrap:wrap; justify-content:center; align-items:stretch; min-height:190px; }
+  /* quick toggle (тема) */
+  --qt-bg:#f2f2f2; --qt-border:#cfcfcf; --qt-knob:#fff;
+  --qt-sun:#ffb300; --qt-moon:#9bbcff;
 
-    /* ===== КАРТОЧКИ flip ===== */
-    .card{ width:280px; height:180px; cursor:pointer; display:block; border-radius:12px; }
-    .card-inner{ position:relative; width:100%; height:100%; }
-    .card-front, .card-back{
-      position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
-      font-size:18px; padding:10px; box-sizing:border-box;
-      border-radius:12px; border:1px solid var(--card-border); text-align:center;
-      background:var(--card-bg);
-    }
-    .card-front{ font-weight:700; letter-spacing:.3px; text-transform:uppercase; }
-    .card-back{ background:var(--back-bg); font-style:italic; }
+  /* масштаб фронта карточек (a–A) */
+  --front-font-scale: 1;
+}
 
-    /* отдельная подсветка ОГОНЬ */
-    .card-front.fire { color:red; font-weight:900; }
+body.dark{
+  --page-bg: linear-gradient(rgba(0,0,0,.35), rgba(0,0,0,.35)),
+             url("./money-fire-night.png") center/cover no-repeat fixed;
 
-    .card .card-back{ display:none; }
-    .card.flipped .card-front{ display:none; }
-    .card.flipped .card-back{ display:flex; }
+  --text:#eee;
+  --card-bg: rgba(20,20,20,.95);
+  --card-border:#3a3a3a;
+  --back-bg: rgba(30,30,30,.95);
+  --pill-bg:#000;
 
-    @supports ((transform-style: preserve-3d) and (backface-visibility: hidden)) {
-      .card{ perspective:1000px; }
-      .card-inner{ transform-style:preserve-3d; transition:transform .6s; }
-      .card.flipped .card-inner{ transform:rotateY(180deg); }
-      .card-front, .card-back{ backface-visibility:hidden; display:flex; }
-      .card-back{ transform:rotateY(180deg); }
-    }
+  --headline-bg:#000; --headline-border:#000; --headline-text:#fff;
 
-    /* ===== КАРТОЧКИ статичные ===== */
-    .card-static{
-      width:320px; min-height:180px; display:flex; flex-direction:column; gap:8px;
-      padding:14px; border-radius:12px; border:1px solid var(--card-border);
-      background:var(--card-bg); box-sizing:border-box;
-    }
-    .card-title{ font-weight:600; font-size:18px; }
-    .card-text{ font-size:16px; line-height:1.35; }
+  --button-primary:#278f3a; --button-primary-hover:#1f7c31;
 
-    /* ===== КНОПКИ ===== */
-    .buttons{ margin-top:20px; display:flex; gap:10px; }
-    .btn-nav{
-      display:flex; align-items:center; gap:8px;
-      padding:12px 18px; font-size:18px; font-weight:600;
-      border:none; border-radius:10px; background:var(--button-primary); color:#fff; cursor:pointer;
-      transition:background .15s ease;
-    }
-    .btn-nav:hover{ background:var(--button-primary-hover); }
+  --modal-backdrop: rgba(0,0,0,.65);
 
-    .btn-with-peach{ position:relative; overflow:visible; }
-    .butt-svg{ width:28px; height:28px; }
-    body:not(.dark) .butt-svg{ display:none; }
+  --menu-btn-bg:#111; --menu-btn-border:#000; --menu-btn-text:#fff;
+}
 
-    .fart-puff{
-      position:absolute; right:-8px; top:50%;
-      transform:translate(0,-50%); font-size:20px; opacity:0;
-      animation:puff 700ms ease-out forwards;
-    }
-    @keyframes puff{
-      0%  {opacity:0; transform:translate(8px,-50%) scale(.6);}
-      20% {opacity:1;}
-      100%{opacity:0; transform:translate(40px,-60%) scale(1.2);}
-    }
+/* ===== БАЗА ===== */
+*{box-sizing:border-box}
+body{
+  margin:0; min-height:100vh; display:flex; flex-direction:column; align-items:center;
+  padding:40px; font-family:sans-serif;
+  background:var(--page-bg); color:var(--text);
+}
+.game-title{
+  margin:0 0 14px 0; padding:10px 16px; display:inline-block;
+  font-size:44px; font-weight:800; color:var(--headline-text);
+  background:var(--headline-bg); border:2px solid var(--headline-border); border-radius:14px;
+}
+.rules{ font-size:16px; max-width:820px; text-align:center; margin-bottom:8px; }
 
-    /* ===== НАСТРОЙКИ ===== */
-    #open-settings{
-      padding:8px 14px; border-radius:8px; border:1px solid var(--menu-btn-border);
-      background:var(--menu-btn-bg); color:var(--menu-btn-text); cursor:pointer;
-    }
-    #open-settings:hover{ filter:brightness(.92); }
+#progress{
+  font-size:14px; font-weight:700; color:#fff;
+  background:var(--pill-bg); padding:6px 12px; border-radius:999px;
+  display:inline-block; margin:6px 0 12px;
+}
 
-    #settings-overlay{
-      position:fixed; inset:0; background:var(--modal-backdrop);
-      display:flex; justify-content:center; align-items:center; z-index:9999;
-    }
-    #settings-overlay[hidden]{ display:none !important; }
-    #settings-modal{
-      width:min(700px, 92vw); max-height:86vh; overflow:auto;
-      background:var(--card-bg); border-radius:12px; border:1px solid var(--card-border); box-shadow:0 12px 40px rgba(0,0,0,.2);
-    }
-    .settings-header{ display:flex; justify-content:space-between; align-items:center; padding:12px 16px; border-bottom:1px solid var(--card-border); }
-    .settings-header h2{ margin:0; font-size:18px; }
-    #close-settings{ border:1px solid #000; background:#000; color:#fff; border-radius:8px; width:32px; height:32px; display:grid; place-items:center; cursor:pointer; font-size:18px; }
-    .settings-body{ padding:12px 16px; }
-    .settings-footer{ padding:12px 16px; border-top:1px solid var(--card-border); display:flex; justify-content:flex-end; gap:8px; }
-    .hidden{ display:none !important; }
+#card-container{
+  width:100%; display:flex; gap:16px; flex-wrap:wrap;
+  justify-content:center; align-items:stretch; min-height:190px;
+}
 
-    .menu-grid{ display:grid; gap:10px; grid-template-columns:1fr 1fr; }
-    .menu-btn{
-      padding:12px; border:1px solid var(--menu-btn-border); background:var(--menu-btn-bg); color:var(--menu-btn-text);
-      border-radius:10px; cursor:pointer; text-align:center; font-weight:700;
-    }
-    .menu-btn:hover{ filter:brightness(.9); }
+/* flip-карточка */
+.card{ width:320px; height:200px; cursor:pointer; display:block; border-radius:12px; }
+.card-inner{ position:relative; width:100%; height:100%; }
+.card-front, .card-back{
+  position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+  font-size:calc(18px * var(--front-font-scale));
+  padding:10px; box-sizing:border-box;
+  border-radius:12px; border:1px solid var(--card-border); text-align:center;
+  background:var(--card-bg);
+}
+.card-front{ font-weight:800; letter-spacing:.3px; text-transform:uppercase; }
+.card-back{ background:var(--back-bg); font-style:italic; font-size:18px; }
 
-    #settings-list{ list-style:none; margin:8px 0 0; padding:0; display:grid; grid-template-columns:repeat(2, 1fr); gap:8px 16px; }
-    #settings-list li{ display:flex; align-items:center; gap:8px; padding:6px 8px; border:1px solid var(--card-border); border-radius:8px; background:var(--back-bg); }
+/* Огонь красным */
+.card-front.is-fire{ color:#ff3b3b; }
 
-    .btn-secondary{
-      background:#f3f3f3; color:#222; border:1px solid #ccc; border-radius:8px; padding:8px 12px; cursor:pointer;
-    }
-    body.dark .btn-secondary{ background:#222; color:#eee; border-color:#444; }
+/* Показ обратной стороны */
+.card .card-back{ display:none; }
+.card.flipped .card-front{ display:none; }
+.card.flipped .card-back{ display:flex; }
 
-    #settings-ok{ padding:8px 14px; border-radius:8px; border:1px solid #000; background:var(--button-primary); color:#fff; cursor:pointer; }
-  </style>
+/* Красивый флип при наличии 3D */
+@supports ((transform-style: preserve-3d) and (backface-visibility: hidden)) {
+  .card{ perspective:1000px; }
+  .card-inner{ transform-style:preserve-3d; transition:transform .6s; }
+  .card.flipped .card-inner{ transform:rotateY(180deg); }
+  .card-front, .card-back{ backface-visibility:hidden; display:flex; }
+  .card-back{ transform:rotateY(180deg); }
+}
+
+/* статичные карточки (для сплита) */
+.card-static{
+  width:360px; min-height:200px; display:flex; flex-direction:column; gap:8px;
+  padding:14px; border-radius:12px; border:1px solid var(--card-border);
+  background:var(--card-bg); box-sizing:border-box;
+}
+.card-title{ font-weight:700; font-size:20px; }
+.card-text{ font-size:16px; line-height:1.35; }
+
+/* Кнопки */
+.buttons{ margin-top:20px; display:flex; gap:10px; }
+.btn-nav{
+  display:flex; align-items:center; gap:8px;
+  padding:12px 18px; font-size:18px; font-weight:700;
+  border:none; border-radius:10px; background:var(--button-primary); color:#fff; cursor:pointer;
+  transition:background .15s ease;
+}
+.btn-nav:hover{ background:var(--button-primary-hover); }
+
+.btn-with-peach{ position:relative; overflow:visible; }
+.butt-svg{ width:28px; height:28px; }
+body:not(.dark) .butt-svg{ display:none; }
+
+.fart-puff{
+  position:absolute; right:-8px; top:50%;
+  transform:translate(0,-50%); font-size:20px; opacity:0; pointer-events:none;
+  animation:puff 700ms ease-out forwards;
+}
+@keyframes puff{
+  0%  {opacity:0; transform:translate(8px,-50%) scale(.6);}
+  20% {opacity:1;}
+  100%{opacity:0; transform:translate(40px,-60%) scale(1.2);}
+}
+
+/* Кнопка назад с бэка (для single) */
+#back-from-back{
+  margin-top:10px;
+  display:none;
+  font-size:14px; font-weight:600;
+  padding:8px 12px; border-radius:8px;
+  background:#555; color:#fff; border:none; cursor:pointer;
+}
+#back-from-back.show{ display:inline-block; }
+
+/* ===== НАСТРОЙКИ (модалка) ===== */
+#open-settings{
+  padding:8px 14px; border-radius:8px; border:1px solid var(--menu-btn-border);
+  background:var(--menu-btn-bg); color:var(--menu-btn-text); cursor:pointer;
+}
+#open-settings:hover{ filter:brightness(.92); }
+
+#settings-overlay{
+  position:fixed; inset:0; background:var(--modal-backdrop);
+  display:flex; justify-content:center; align-items:center; z-index:9999;
+}
+#settings-overlay[hidden]{ display:none !important; }
+
+#settings-modal{
+  width:min(720px, 92vw); max-height:86vh; overflow:auto;
+  background:var(--card-bg); border-radius:12px; border:1px solid var(--card-border);
+  box-shadow:0 12px 40px rgba(0,0,0,.2);
+}
+.settings-header{ display:flex; justify-content:space-between; align-items:center; padding:12px 16px; border-bottom:1px solid var(--card-border); }
+.settings-header h2{ margin:0; font-size:18px; }
+#close-settings{ border:1px solid #000; background:#000; color:#fff; border-radius:8px; width:32px; height:32px; display:grid; place-items:center; cursor:pointer; font-size:18px; }
+.settings-body{ padding:12px 16px; }
+.settings-footer{ padding:12px 16px; border-top:1px solid var(--card-border); display:flex; justify-content:flex-end; gap:8px; }
+.hidden{ display:none !important; }
+
+.menu-grid{ display:grid; gap:10px; grid-template-columns:1fr; }
+.menu-btn{
+  padding:12px; border:1px solid var(--menu-btn-border); background:var(--menu-btn-bg); color:var(--menu-btn-text);
+  border-radius:10px; cursor:pointer; text-align:center; font-weight:700;
+}
+.menu-btn:hover{ filter:brightness(.9); }
+
+#settings-list{ list-style:none; margin:8px 0 0; padding:0; display:grid; grid-template-columns:repeat(2, 1fr); gap:8px 16px; }
+#settings-list li{ display:flex; align-items:center; gap:8px; padding:6px 8px; border:1px solid var(--card-border); border-radius:8px; background:var(--back-bg); }
+
+.btn-secondary{
+  background:#f3f3f3; color:#222; border:1px solid #ccc; border-radius:8px; padding:8px 12px; cursor:pointer;
+}
+body.dark .btn-secondary{ background:#222; color:#eee; border-color:#444; }
+
+/* ===== ТУМБЛЕР ТЕМЫ (капсула, правый верх) ===== */
+#theme-toggle-container{
+  position:fixed; top:16px; right:16px; z-index:10000;
+  display:flex; gap:10px; align-items:center;
+}
+.theme-toggle{
+  width:64px; height:34px; background:var(--qt-bg);
+  border:1px solid var(--qt-border); border-radius:999px;
+  display:flex; align-items:center; justify-content:space-between; padding:0 8px; cursor:pointer;
+  position:relative; user-select:none;
+}
+.theme-toggle .knob{
+  position:absolute; top:3px; left:3px; width:28px; height:28px; border-radius:50%;
+  background:var(--qt-knob); transition:left .18s ease;
+}
+.theme-toggle .sun{ font-size:18px; color:var(--qt-sun); }
+.theme-toggle .moon{ font-size:18px; color:var(--qt-moon); }
+body.dark .theme-toggle .knob{ left:33px; }
+
+/* Тумблер a–A (размер шрифта фронта) */
+.size-toggle{
+  width:64px; height:34px; background:var(--qt-bg);
+  border:1px solid var(--qt-border); border-radius:999px;
+  display:flex; align-items:center; justify-content:space-between; padding:0 10px; cursor:pointer;
+  position:relative; user-select:none;
+}
+.size-toggle .label-a{ font-weight:800; font-size:14px; }
+.size-toggle .label-A{ font-weight:800; font-size:18px; }
+.size-toggle .knob{
+  position:absolute; top:3px; left:3px; width:28px; height:28px; border-radius:50%;
+  background:var(--qt-knob); transition:left .18s ease;
+}
+body.bigfront .size-toggle .knob{ left:33px; }
+</style>
 </head>
 <body>
+
+<!-- Тумблеры (справа сверху) -->
+<div id="theme-toggle-container" aria-live="polite">
+  <div id="theme-toggle" class="theme-toggle" role="button" aria-label="Переключить тему">
+    <span class="sun">🌞</span>
+    <span class="moon">🌙</span>
+    <span class="knob" aria-hidden="true"></span>
+  </div>
+
+  <div id="size-toggle" class="size-toggle" role="button" aria-label="Размер фронта карточек (a–A)">
+    <span class="label-a">a</span>
+    <span class="label-A">A</span>
+    <span class="knob" aria-hidden="true"></span>
+  </div>
+</div>
+
+<h1 class="game-title">КАРТОЧНАЯ ИГРА “MONEY MUST BE FUNNY”</h1>
+
+<div class="rules">
+  Нажимай на карточку, чтобы посмотреть варианты решений.<br>
+  Твоя задача — монетизировать каждый элемент.
+</div>
+
+<!-- Кнопка настроек -->
+<button id="open-settings" type="button" style="margin: 12px 0;">Настройки</button>
+
+<!-- Модалка настроек -->
+<div id="settings-overlay" hidden>
+  <div id="settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+    <div class="settings-header">
+      <h2 id="settings-title">Настройки</h2>
+      <button id="close-settings" type="button" aria-label="Закрыть">×</button>
+    </div>
+    <div class="settings-body">
+      <div id="settings-menu" class="menu-grid">
+        <button class="menu-btn" id="open-elements" type="button">Список элементов</button>
+      </div>
+
+      <div id="settings-elements" class="hidden">
+        <p style="margin-top:0">Вы можете убрать из списка ненужный вам элемент, нажав на пункт с галочкой.</p>
+        <div style="display:flex; gap:8px; margin-bottom:8px;">
+          <button id="select-all" class="btn-secondary" type="button">Выбрать всё</button>
+          <button id="clear-all" class="btn-secondary" type="button">Сбросить всё</button>
+        </div>
+        <ul id="settings-list"></ul>
+      </div>
+    </div>
+    <div class="settings-footer">
+      <button id="back-to-menu" class="btn-secondary hidden" type="button">← Назад</button>
+      <button id="settings-ok" type="button">Готово</button>
+    </div>
+  </div>
+</div>
+<!-- /Модалка -->
+
+<div id="progress" aria-live="polite"></div>
+
+<div id="card-container"></div>
+
+<!-- видимая только когда единичная карточка перевёрнута -->
+<button id="back-from-back" type="button">← Назад к лицевой стороне</button>
+
+<div class="buttons">
+  <!-- «Назад» — общий стиль + «персик» (только в тёмной теме) -->
+  <button id="prev-btn" type="button" class="btn-nav btn-with-peach" title="Назад (←)">
+    <span id="prev-label">Назад</span>
+    <!-- Персик — задумчивый -->
+    <svg id="butt-think" class="butt-svg" viewBox="0 0 64 64" aria-hidden="true">
+      <defs><style>.o{stroke:#2b1b18;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}</style></defs>
+      <path class="o" fill="#ffc7b8" d="M32 14c-3-4-11-6-17-1-6 5-8 15-2 23 5 7 13 11 19 12 6-1 14-5 19-12 6-8 4-18-2-23-6-5-14-3-17 1z"/>
+      <path class="o" d="M32 14c-4 10-3 21 0 33" fill="none"/>
+      <path class="o" d="M28 36h8" />
+      <path class="o" d="M24 30h0" />
+      <path class="o" d="M40 30h0" />
+      <circle cx="22" cy="35" r="2" fill="#f7a7a0"/>
+      <circle cx="42" cy="35" r="2" fill="#f7a7a0"/>
+    </svg>
+    <!-- Персик — улыбается -->
+    <svg id="butt-smile" class="butt-svg hidden" viewBox="0 0 64 64" aria-hidden="true">
+      <defs><style>.o{stroke:#2b1b18;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}</style></defs>
+      <path class="o" fill="#ffc7b8" d="M32 14c-3-4-11-6-17-1-6 5-8 15-2 23 5 7 13 11 19 12 6-1 14-5 19-12 6-8 4-18-2-23-6-5-14-3-17 1z"/>
+      <path class="o" d="M32 14c-4 10-3 21 0 33" fill="none"/>
+      <path class="o" d="M24 30c2 1 4 1 6 0" fill="none"/>
+      <path class="o" d="M34 30c2 1 4 1 6 0" fill="none"/>
+      <path class="o" d="M26 36c3 3 9 3 12 0" fill="none"/>
+      <circle cx="22" cy="35" r="2" fill="#f7a7a0"/>
+      <circle cx="42" cy="35" r="2" fill="#f7a7a0"/>
+    </svg>
+  </button>
+
+  <!-- «Вперёд» — тот же общий стиль -->
+  <button id="next-btn" type="button" class="btn-nav" title="Вперёд (→)">Вперёд</button>
+</div>
+
+<script>
+(function(){
+  /* ——— данные (10 штук, как было) ——— */
+  var cardsData = [
+    { type: 'single', front: 'Земля',  back: 'Ресурсы, сельское хозяйство, недвижимость' },
+    { type: 'single', front: 'Вода',   back: 'Продажа питьевой воды, гидроэнергетика, туризм' },
+    { type: 'single', front: 'Огонь',  back: 'Энергетика, обогрев, кулинария' },
+    { type: 'single', front: 'Воздух', back: 'Туризм, воздух в баллонах, реклама на воздушных шарах' },
+
+    { type: 'multi', front: 'Хлопок',
+      labels: ['Одежда и базовые изделия', 'Домашний декор'],
+      texts:  ['Футболки, постельное бельё, полотенца, пижамы.', 'Шторы, скатерти, пледы, чехлы на мебель.'] },
+
+    { type: 'multi', front: 'Шерсть',
+      labels: ['Тёплые изделия', 'Интерьер'],
+      texts:  ['Свитера, носки, варежки, шарфы, пледы (меринос, альпака, смесь).', 'Шерстяные покрывала, ковры, подушки, панно из войлока.'] },
+
+    { type: 'multi', front: 'Сталь',
+      labels: ['Малые архитектурные формы', 'Спорт/дом'],
+      texts:  ['Стеллажи, каркасы столов, уличные кашпо.', 'Турники, стойки для штанги, кронштейны, крепёжные комплекты.'] },
+
+    { type: 'multi', front: 'Блёстки',
+      labels: ['Косметика', 'Одежда и аксессуары'],
+      texts:  ['Косметика: тени, хайлайтеры, лаки для ногтей.',
+               'Одежда и аксессуары: ткани с блёстками, сумки, украшения.'] },
+
+    { type: 'multi', front: 'Песок',
+      labels: ['Стекло', 'Строительные материалы'],
+      texts:  ['Плавишь песок → получаешь стекло (окна, бутылки, зеркала, экраны телефонов).',
+               'Стройматериалы. Песок добавляют в бетон и цемент. Кирпичи, плитка, асфальт — почти всё это делается с песком.'] },
+
+    { type: 'multi', front: 'Смола',
+      labels: ['Клей', 'Музыкальные инструменты'],
+      texts:  ['Производство клея.',
+               'Лаки/смолы для скрипок и музыкальных инструментов.'] }
+  ];
+
+  /* сортировка по алфавиту (русская локаль) */
+  cardsData.sort(function(a,b){ return a.front.localeCompare(b.front, 'ru'); });
+
+  /* видимость элементов (по умолчанию все) */
+  var visible = new Set(cardsData.map(c => c.front));
+
+  var currentIndex = 0;
+  var container   = document.getElementById('card-container');
+  var progressEl  = document.getElementById('progress');
+  var backFromBackBtn = document.getElementById('back-from-back');
+
+  function getFiltered(){ return cardsData.filter(c => visible.has(c.front)); }
+
+  /* фабрики */
+  function createFlipCard(item){
+    var wrapper = document.createElement('div'); wrapper.className = 'card';
+    var inner   = document.createElement('div'); inner.className   = 'card-inner';
+    var front   = document.createElement('div'); front.className   = 'card-front';
+    front.textContent = item.front.toUpperCase();
+    if (item.front.toLowerCase() === 'огонь') front.classList.add('is-fire');
+    var back    = document.createElement('div'); back.className    = 'card-back';  back.textContent  = item.back || '';
+    inner.appendChild(front); inner.appendChild(back); wrapper.appendChild(inner);
+
+    function flip(toBack){
+      if (toBack === true) wrapper.classList.add('flipped');
+      else if (toBack === false) wrapper.classList.remove('flipped');
+      else wrapper.classList.toggle('flipped');
+
+      // показываем кнопку «назад с бэка» только для single и когда flipped
+      var show = wrapper.classList.contains('flipped');
+      backFromBackBtn.classList.toggle('show', show);
+    }
+
+    wrapper.addEventListener('click', function(){ flip(); });
+    return { el: wrapper, flipToFront: () => flip(false) };
+  }
+
+  function createInfoCard(title, text){
+    var box = document.createElement('div'); box.className = 'card-static';
+    var t = document.createElement('div'); t.className = 'card-title'; t.textContent = title;
+    var d = document.createElement('div'); d.className = 'card-text';  d.textContent = text;
+    box.appendChild(t); box.appendChild(d); return box;
+  }
+
+  function createMultiFrontCard(title, onOpen){
+    var wrapper = document.createElement('div'); wrapper.className = 'card';
+    var inner   = document.createElement('div'); inner.className   = 'card-inner';
+    var front   = document.createElement('div'); front.className   = 'card-front'; front.textContent = title.toUpperCase();
+    if (title.toLowerCase() === 'огонь') front.classList.add('is-fire');
+    var back    = document.createElement('div'); back.className    = 'card-back';  back.textContent = '';
+    inner.appendChild(front); inner.appendChild(back); wrapper.appendChild(inner);
+    wrapper.addEventListener('click', function(){ if (onOpen) onOpen(); });
+    return wrapper;
+  }
+
+  /* рендеры */
+  var lastSingleFlipAPI = null;
+
+  function renderSingle(item){
+    container.innerHTML = '';
+    var fc = createFlipCard(item);
+    lastSingleFlipAPI = fc;
+    container.appendChild(fc.el);
+  }
+
+  function renderMultiFront(item){
+    container.innerHTML = '';
+    lastSingleFlipAPI = null;
+    container.appendChild(createMultiFrontCard(item.front, function(){ renderMultiSplit(item); }));
+  }
+
+  function renderMultiSplit(item){
+    container.innerHTML = '';
+    lastSingleFlipAPI = null;
+    container.appendChild(createInfoCard(item.labels[0], item.texts[0]));
+    container.appendChild(createInfoCard(item.labels[1], item.texts[1]));
+  }
+
+  function render(){
+    var list = getFiltered();
+    if(list.length === 0){
+      container.innerHTML = '<div class="card-static"><div class="card-title">Пусто</div><div class="card-text">Вы скрыли все элементы в настройках.</div></div>';
+      progressEl.textContent = '0 / 0';
+      backFromBackBtn.classList.remove('show');
+      return;
+    }
+    currentIndex = ((currentIndex % list.length) + list.length) % list.length;
+    var item = list[currentIndex];
+    if (item.type === 'single') renderSingle(item);
+    else renderMultiFront(item);
+    progressEl.textContent = (currentIndex + 1) + ' / ' + list.length;
+    backFromBackBtn.classList.remove('show');
+  }
+
+  /* Навигация */
+  function go(delta){
+    var len = getFiltered().length || 1;
+    currentIndex = (currentIndex + delta + len) % len;
+    render();
+  }
+
+  document.getElementById('next-btn').onclick = function(){ go(1); };
+  document.getElementById('prev-btn').onclick = function(){
+    // персик-анимация только в тёмной теме
+    if (document.body.classList.contains('dark')){
+      var think = document.getElementById('butt-think');
+      var smile = document.getElementById('butt-smile');
+      think.classList.add('hidden'); smile.classList.remove('hidden');
+      var prevBtn = document.getElementById('prev-btn');
+      var puff = document.createElement('span'); puff.className = 'fart-puff'; puff.textContent = '💨';
+      prevBtn.appendChild(puff);
+      setTimeout(function(){ puff.remove(); }, 720);
+      setTimeout(function(){ smile.classList.add('hidden'); think.classList.remove('hidden'); }, 900);
+    }
+    go(-1);
+  };
+
+  // Кнопка «назад с бэка» у single
+  backFromBackBtn.addEventListener('click', function(){
+    if (lastSingleFlipAPI) lastSingleFlipAPI.flipToFront();
+  });
+
+  /* Горячие клавиши */
+  document.addEventListener('keydown', function(e){
+    const tag = (e.target && e.target.tagName) ? e.target.tagName.toLowerCase() : '';
+    if (tag === 'input' || tag === 'textarea' || tag === 'select' || e.isComposing) return;
+
+    if (e.key === 'Escape') {
+      // открыть/закрыть настройки
+      if (overlay.hidden) { overlay.hidden = false; showMenu(); }
+      else { overlay.hidden = true; }
+      e.preventDefault(); return;
+    }
+    if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') { go(-1); e.preventDefault(); return; }
+    if (e.key === 'ArrowRight'|| e.key === 'd' || e.key === 'D') { go(1);  e.preventDefault(); return; }
+  });
+
+  render();
+
+  /* === НАСТРОЙКИ === */
+  var overlay = document.getElementById('settings-overlay');
+  var btnOpen = document.getElementById('open-settings');
+  var btnClose= document.getElementById('close-settings');
+  var btnOk   = document.getElementById('settings-ok');
+  var btnBack = document.getElementById('back-to-menu');
+  var menu    = document.getElementById('settings-menu');
+  var elems   = document.getElementById('settings-elements');
+  var listEl  = document.getElementById('settings-list');
+  var titleEl = document.getElementById('settings-title');
+  var btnOpenElems = document.getElementById('open-elements');
+  var btnSelectAll = document.getElementById('select-all');
+  var btnClearAll  = document.getElementById('clear-all');
+
+  function buildList(){
+    listEl.innerHTML = '';
+    var data = cardsData.slice().sort(function(a,b){ return a.front.localeCompare(b.front,'ru'); });
+    data.forEach(function(c){
+      var li = document.createElement('li');
+      var label = document.createElement('label');
+      var cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.checked = visible.has(c.front);
+      cb.onchange = function(){
+        if (cb.checked) visible.add(c.front); else visible.delete(c.front);
+        render();
+      };
+      label.appendChild(cb);
+      label.appendChild(document.createTextNode(' ' + c.front));
+      li.appendChild(label);
+      listEl.appendChild(li);
+    });
+  }
+
+  function showMenu(){
+    titleEl.textContent = 'Настройки';
+    menu.classList.remove('hidden');
+    elems.classList.add('hidden');
+    btnBack.classList.add('hidden');
+  }
+  function showElems(){
+    titleEl.textContent = 'Настройки · Список элементов';
+    menu.classList.add('hidden');
+    elems.classList.remove('hidden');
+    btnBack.classList.remove('hidden');
+    buildList();
+  }
+
+  btnOpen.onclick  = () => { overlay.hidden = false; showMenu(); };
+  btnClose.onclick = () => { overlay.hidden = true; };
+  btnOk.onclick    = () => { overlay.hidden = true; };
+  btnBack.onclick  = showMenu;
+  btnOpenElems.onclick = showElems;
+
+  btnSelectAll.onclick = function(){ cardsData.forEach(c => visible.add(c.front)); buildList(); render(); };
+  btnClearAll.onclick  = function(){ visible.clear(); buildList(); render(); };
+
+  overlay.addEventListener('click', function(e){ if(e.target === overlay) overlay.hidden = true; });
+
+  /* === Тумблер темы 🌞/🌙 === */
+  function applyTheme(dark){
+    document.body.classList.toggle('dark', dark);
+    // подпись на кнопке «Назад» в тёмной теме — «На»
+    document.getElementById('prev-label').textContent = dark ? 'На' : 'Назад';
+    try { localStorage.setItem('mmf_theme', dark ? 'dark' : 'light'); } catch(e){}
+  }
+  try { applyTheme(localStorage.getItem('mmf_theme') === 'dark'); } catch(e){}
+  document.getElementById('theme-toggle').addEventListener('click', function(){
+    applyTheme(!document.body.classList.contains('dark'));
+  });
+
+  /* === Тумблер a–A (масштаб фронта) === */
+  function applyFrontScale(big){
+    document.body.classList.toggle('bigfront', big);
+    document.documentElement.style.setProperty('--front-font-scale', big ? '1.6' : '1');
+    try { localStorage.setItem('mmf_front_big', big ? '1' : '0'); } catch(e){}
+  }
+  try { applyFrontScale(localStorage.getItem('mmf_front_big') === '1'); } catch(e){}
+  document.getElementById('size-toggle').addEventListener('click', function(){
+    applyFrontScale(!document.body.classList.contains('bigfront'));
+  });
+
+})();
+</script>
+
+</body>
+</html>
